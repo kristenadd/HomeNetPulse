@@ -33,6 +33,7 @@ final class DashboardModel {
     var routerError: String?
     var devicePings: [DevicePing] = []
     var isRefreshing = false
+    var defaultGateway: String?
     var lastRefresh: Date?
     var rebootStatus: String?
     var rebooting = false
@@ -74,6 +75,35 @@ final class DashboardModel {
 
     var internetDown: Bool { internetHealth == .down }
 
+    var gatewayHealth: Health {
+        guard let reachable = routerReachable else { return .unknown }
+        guard reachable else { return routerPing?.received ?? 0 > 0 ? .degraded : .down }
+        if let state = broadband?.lineState?.lowercased(), state.contains("down") { return .down }
+        return max(routerPing?.health ?? .good, routerError == nil ? .good : .degraded)
+    }
+
+    /// The base station acting as the main router: user choice, else the default gateway, else best guess.
+    var mainRouter: BaseStation? {
+        if let mac = settings.mainRouterMAC, let s = baseStations.first(where: { $0.ethernetMAC == mac }) { return s }
+        if let gw = defaultGateway, let s = baseStations.first(where: { $0.ipAddress == gw }) { return s }
+        if let s = baseStations.first(where: { $0.ipAddress?.hasSuffix(".1") == true }) { return s }
+        if let s = baseStations.first(where: { $0.txt["raNA"] == "1" }) { return s }
+        return baseStations.first
+    }
+
+    var extenders: [BaseStation] {
+        let main = mainRouter?.id
+        return baseStations.filter { $0.id != main }
+    }
+
+    var extendersHealth: Health {
+        extenders.isEmpty ? .unknown : extenders.map(\.health).max() ?? .unknown
+    }
+
+    func setMainRouter(_ station: BaseStation?) {
+        settings.mainRouterMAC = station?.ethernetMAC
+    }
+
     var verification: NetworkVerification {
         let found = Set(baseStations.compactMap(\.ethernetMAC))
         let trusted = settings.trustedBaseStationMACs
@@ -113,6 +143,7 @@ final class DashboardModel {
         guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false; lastRefresh = Date() }
+        defaultGateway = DefaultGateway.ipv4()
         async let airports: Void = browser.probeAll()
         async let internet: Void = refreshInternet()
         async let router: Void = refreshRouter()
@@ -134,20 +165,23 @@ final class DashboardModel {
             return
         }
         async let icmp = Pinger.ping(host, count: 3)
-        let (ok, latency) = await client.reachable()
-        routerReachable = ok
-        routerLatencyMs = latency
-        routerPing = await icmp
-        guard ok else {
-            routerError = "Gateway web interface is not responding."
-            return
-        }
+        // broadbandstatistics.ha renders quickly (<1 s) and doubles as the web-UI reachability check.
+        let start = Date()
         do {
             broadband = try await client.broadband()
+            routerReachable = true
+            routerLatencyMs = Date().timeIntervalSince(start) * 1000
             routerError = nil
+        } catch RouterError.unreachable(let msg) {
+            routerReachable = false
+            routerLatencyMs = nil
+            routerError = "Gateway web interface is not responding (\(msg))."
         } catch {
+            routerReachable = true
+            routerLatencyMs = Date().timeIntervalSince(start) * 1000
             routerError = error.localizedDescription
         }
+        routerPing = await icmp
         rebuildDevicePingList()
     }
 

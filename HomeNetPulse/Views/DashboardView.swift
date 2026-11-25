@@ -1,34 +1,52 @@
 import SwiftUI
 
+enum Route: Hashable {
+    case gateway
+    case station(String)
+}
+
 struct DashboardView: View {
     @Environment(DashboardModel.self) private var model
     @Environment(AppSettings.self) private var settings
     @State private var showSettings = false
-    @State private var confirmReboot = false
 
     var body: some View {
         NavigationStack {
-            List {
-                verificationSection
-                airportSection
-                internetSection
-                routerSection
-                devicePingSection
-                broadbandSection
-                rebootSection
+            ScrollView {
+                VStack(spacing: 0) {
+                    VerificationBanner()
+                        .padding(.bottom, 18)
+                    internetNode
+                    TopologyConnector(health: model.gatewayHealth == .down ? .down : model.internetHealth,
+                                      label: ispHopLabel)
+                    gatewayNode
+                    TopologyConnector(health: model.mainRouter?.health ?? .unknown,
+                                      label: model.routerPing.map { "\(settings.routerBaseURL?.host() ?? "gateway") · \($0.shortSummary)" })
+                    routerNode
+                    if !model.extenders.isEmpty {
+                        TopologyConnector(health: model.extendersHealth, label: nil)
+                        extendersNode
+                    }
+                    footer
+                }
+                .padding(16)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
             }
+            .background(Color.platformGroupedBackground)
             .navigationTitle("HomeNet Pulse")
-            #if os(macOS)
-            .listStyle(.inset(alternatesRowBackgrounds: false))
-            #else
-            .listStyle(.insetGrouped)
-            #endif
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .gateway: GatewayDetailView()
+                case .station(let id):
+                    if let s = model.baseStations.first(where: { $0.id == id }) { BaseStationDetail(station: s) }
+                    else { ContentUnavailableView("Base station not found", systemImage: "wifi.router") }
+                }
+            }
             .refreshable { await model.refresh() }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        Task { await model.refresh() }
-                    } label: {
+                    Button { Task { await model.refresh() } } label: {
                         if model.isRefreshing { ProgressView().controlSize(.small) }
                         else { Label("Refresh", systemImage: "arrow.clockwise") }
                     }
@@ -42,223 +60,220 @@ struct DashboardView: View {
             .sheet(isPresented: $showSettings) {
                 NavigationStack {
                     SettingsView()
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) { Button("Done") { showSettings = false } }
-                        }
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showSettings = false } } }
                 }
                 #if os(macOS)
                 .frame(minWidth: 520, minHeight: 620)
                 #endif
             }
-            .confirmationDialog("Reboot the fiber gateway?", isPresented: $confirmReboot, titleVisibility: .visible) {
-                Button("Reboot Gateway", role: .destructive) { Task { await model.rebootRouter() } }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text(model.internetDown
-                     ? "The internet is unreachable. Rebooting takes the whole network offline for a few minutes."
-                     : "The internet currently looks reachable. Rebooting takes the whole network offline for a few minutes.")
-            }
         }
         .task { model.start() }
     }
 
-    // MARK: Sections
+    private var ispHopLabel: String? {
+        guard let gw = model.broadband?.gatewayIPv4 else { return nil }
+        if let r = model.devicePings.first(where: { $0.host == gw })?.result { return "ISP \(gw) · \(r.shortSummary)" }
+        return "ISP gateway \(gw)"
+    }
 
-    @ViewBuilder private var verificationSection: some View {
-        Section("Network") {
-            switch model.verification {
-            case .checking:
-                Label("Checking network identity…", systemImage: "hourglass")
-            case .notConfigured:
-                VStack(alignment: .leading, spacing: 6) {
-                    Label("Network not yet trusted", systemImage: "questionmark.diamond").foregroundStyle(.orange)
-                    Text("Mark this network as yours so HomeNet Pulse can verify it by your base stations' and gateway's MAC addresses.")
-                        .font(.caption).foregroundStyle(.secondary)
-                    Button("Trust This Network") { model.trustCurrentNetwork() }
-                        .disabled(model.baseStations.isEmpty && model.broadband == nil)
+    // MARK: Internet
+
+    private var internetNode: some View {
+        TopologyNode(title: "Internet", subtitle: model.broadband?.wanIPv4.map { "WAN \($0)" },
+                     icon: "globe", health: model.internetHealth) {
+            MetricGrid(items: settings.pingTargets.map { t in
+                let r = model.internetPings[t]
+                return .init(label: t, value: r?.shortSummary ?? "testing…", tint: r?.tint)
+            })
+        }
+    }
+
+    // MARK: Gateway
+
+    private var gatewayNode: some View {
+        let b = model.broadband
+        return TopologyNode(title: "Fiber Gateway", subtitle: settings.routerBaseURL?.host() ?? settings.routerURL,
+                            icon: "fibrechannel", health: model.gatewayHealth,
+                            statusText: model.routerReachable == false ? "Unreachable" : nil) {
+            VStack(alignment: .leading, spacing: 12) {
+                MetricGrid(items: [
+                    .init(label: "Line", value: b?.lineState, tint: b?.lineState?.lowercased().contains("up") == true ? .green : nil),
+                    .init(label: "Speed", value: b?.speedMbps.map { Self.formatSpeed($0) }),
+                    .init(label: "Fiber (PON)", value: b?.ponStatus),
+                    .init(label: "ISP Gateway", value: b?.gatewayIPv4),
+                    .init(label: "ISP DNS", value: b?.primaryDNS),
+                    .init(label: "Web UI", value: model.routerLatencyMs.map { String(format: "%.0f ms", $0) }),
+                ])
+                if let err = model.routerError {
+                    Label(err, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption).foregroundStyle(.orange)
+                        .padding(.leading, Topology.iconSize + 12)
                 }
-            case .verified(let detail):
-                Label { VStack(alignment: .leading) { Text("Verified: your network"); Text(detail).font(.caption).foregroundStyle(.secondary) } }
-                    icon: { Image(systemName: "checkmark.shield.fill").foregroundStyle(.green) }
-            case .mismatch(let detail):
-                Label { VStack(alignment: .leading) { Text("Not your network"); Text(detail).font(.caption).foregroundStyle(.secondary) } }
-                    icon: { Image(systemName: "exclamationmark.shield.fill").foregroundStyle(.red) }
-            }
-            if let last = model.lastRefresh {
-                Text("Updated \(last.formatted(date: .omitted, time: .standard))").font(.caption).foregroundStyle(.secondary)
-            }
-        }
-    }
-
-    @ViewBuilder private var airportSection: some View {
-        Section {
-            if model.baseStations.isEmpty {
-                Text(model.discoveryError ?? "Searching for AirPort base stations…").foregroundStyle(.secondary)
-            }
-            ForEach(model.baseStations) { station in
-                NavigationLink { BaseStationDetail(station: station) } label: { BaseStationRow(station: station) }
-            }
-        } header: {
-            Text("AirPort Base Stations (\(model.baseStations.count))")
-        }
-    }
-
-    @ViewBuilder private var internetSection: some View {
-        Section {
-            ForEach(settings.pingTargets, id: \.self) { target in
-                let r = model.internetPings[target]
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(target).font(.body.monospaced())
-                        PingSummary(result: r)
+                HStack(spacing: 10) {
+                    Button {
+                        Task { await model.runDevicePings() }
+                    } label: {
+                        if model.devicePings.contains(where: \.running) {
+                            HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Pinging…") }
+                        } else {
+                            Label("Ping from Gateway", systemImage: "dot.radiowaves.left.and.right")
+                        }
                     }
+                    .disabled(model.devicePings.contains(where: \.running) || model.routerReachable != true)
+                    RebootButton(compact: true)
                     Spacer()
-                    HealthBadge(health: r?.health ?? .unknown)
+                    NavigationLink(value: Route.gateway) { Label("Details", systemImage: "chevron.right").labelStyle(.titleOnly) }
                 }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .padding(.leading, Topology.iconSize + 12)
             }
-        } header: {
-            HStack { Text("Internet"); Spacer(); HealthBadge(health: model.internetHealth) }
         }
     }
 
-    @ViewBuilder private var routerSection: some View {
-        Section {
-            HStack {
-                Text(settings.routerURL).font(.body.monospaced())
-                Spacer()
-                HealthBadge(health: model.routerReachable == nil ? .unknown : (model.routerReachable! ? (model.routerPing?.health ?? .good) : .down))
+    static func formatSpeed(_ mbps: String) -> String {
+        guard let v = Double(mbps) else { return "\(mbps) Mbps" }
+        return v >= 1000 ? String(format: "%g Gbps", v / 1000) : "\(mbps) Mbps"
+    }
+
+    // MARK: Router
+
+    @ViewBuilder private var routerNode: some View {
+        if let r = model.mainRouter {
+            NavigationLink(value: Route.station(r.id)) {
+                TopologyNode(title: r.name, subtitle: r.ipAddress ?? "resolving…", icon: "wifi.router.fill", health: r.health,
+                             content: { stationMetrics(r) }, accessory: { chevron })
             }
-            KeyValueRow(key: "Web UI response", value: model.routerLatencyMs.map { String(format: "%.0f ms", $0) })
-            LabeledContent("Ping") { PingSummary(result: model.routerPing) }
-            if let b = model.broadband {
-                KeyValueRow(key: "Line state", value: b.lineState)
-                KeyValueRow(key: "Link speed", value: b.speedMbps.map { "\($0) Mbps" })
-                KeyValueRow(key: "PON status", value: b.ponStatus)
-                KeyValueRow(key: "WAN IPv4", value: b.wanIPv4)
-                KeyValueRow(key: "ISP gateway", value: b.gatewayIPv4)
-                KeyValueRow(key: "ISP DNS", value: [b.primaryDNS, b.secondaryDNS].compactMap { $0 }.joined(separator: ", ").nilIfEmpty)
-                KeyValueRow(key: "Receive errors / drops", value: "\(b.receiveErrors ?? "—") / \(b.receiveDrops ?? "—")")
-            }
-            if let err = model.routerError {
-                Text(err).font(.caption).foregroundStyle(.red)
-            }
-        } header: {
-            Text("Fiber Gateway")
+            .buttonStyle(.plain)
+        } else {
+            TopologyNode(title: "Router", subtitle: model.discoveryError ?? "Searching for AirPort base stations…",
+                         icon: "wifi.router", health: .unknown) { EmptyView() }
         }
     }
 
-    @ViewBuilder private var devicePingSection: some View {
-        Section {
-            ForEach(model.devicePings) { p in
-                DisclosureGroup {
-                    if let raw = p.rawOutput {
-                        Text(raw).font(.caption.monospaced()).textSelection(.enabled)
-                    }
-                } label: {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(p.label).font(.caption).foregroundStyle(.secondary)
-                            Text(p.host).font(.body.monospaced())
-                            if let e = p.error { Text(e).font(.caption).foregroundStyle(.red) }
-                            else { PingSummary(result: p.result) }
+    // MARK: Extenders
+
+    private var extendersNode: some View {
+        TopologyNode(title: "Other Base Stations", subtitle: "\(model.extenders.count) extender\(model.extenders.count == 1 ? "" : "s")",
+                     icon: "point.3.connected.trianglepath.dotted", health: model.extendersHealth) {
+            VStack(spacing: 8) {
+                ForEach(model.extenders) { s in
+                    NavigationLink(value: Route.station(s.id)) {
+                        HStack(spacing: 12) {
+                            NodeIcon(systemName: "wifi.router", health: s.health, size: 32)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(s.name).font(.subheadline.weight(.semibold))
+                                Text("\(s.ipAddress ?? "resolving…") · \(s.modelName)").font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text(s.ping?.shortSummary ?? "—").font(.caption.monospacedDigit()).foregroundStyle(s.ping?.tint ?? .secondary)
+                            HealthPill(health: s.health)
+                            chevron
                         }
-                        Spacer()
-                        if p.running { ProgressView().controlSize(.small) }
-                        else { HealthBadge(health: p.result?.health ?? .unknown) }
+                        .padding(10)
+                        .background(.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                 }
             }
-            Button {
-                Task { await model.runDevicePings() }
-            } label: {
-                Label("Ping from Gateway", systemImage: "dot.radiowaves.left.and.right")
-            }
-            .disabled(model.devicePings.contains(where: \.running) || model.routerReachable != true)
-        } header: {
-            Text("Gateway Diagnostics (diag.ha)")
-        } footer: {
-            Text("The gateway pings each host itself, so you can tell whether a problem is on your Wi-Fi or upstream at the ISP.")
+            .padding(.leading, Topology.iconSize + 12)
         }
     }
 
-    @ViewBuilder private var broadbandSection: some View {
-        if let b = model.broadband, !b.sections.isEmpty {
-            Section("Broadband Statistics") {
-                ForEach(b.sections) { section in
-                    DisclosureGroup(section.title) {
-                        ForEach(Array(section.rows.enumerated()), id: \.offset) { _, row in
-                            KeyValueRow(key: row.key, value: row.value.nilIfEmpty)
-                        }
-                    }
-                }
-            }
-        }
+    private func stationMetrics(_ s: BaseStation) -> some View {
+        MetricGrid(items: [
+            .init(label: "Ping", value: s.ping?.shortSummary, tint: s.ping?.tint),
+            .init(label: "Model", value: s.modelName),
+            .init(label: "Firmware", value: s.firmware),
+            .init(label: "Wi-Fi", value: s.networkName),
+            .init(label: "Channels", value: [s.channel5.map { "5G \($0)" }, s.channel24.map { "2.4G \($0)" }].compactMap { $0 }.joined(separator: " · ").nilIfEmpty),
+        ])
     }
 
-    @ViewBuilder private var rebootSection: some View {
-        Section {
-            if model.internetDown {
-                Label("Internet is unreachable from this device.", systemImage: "wifi.exclamationmark")
-                    .foregroundStyle(.red)
+    private var chevron: some View {
+        Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+    }
+
+    private var footer: some View {
+        Group {
+            if let last = model.lastRefresh {
+                Text("Updated \(last.formatted(date: .omitted, time: .standard)) · auto-refresh every \(Int(settings.refreshInterval))s")
+            } else {
+                Text("Checking your network…")
             }
-            Button(role: .destructive) { confirmReboot = true } label: {
-                if model.rebooting { ProgressView().controlSize(.small) }
-                else { Label("Reboot Fiber Gateway", systemImage: "restart.circle") }
-            }
-            .disabled(model.rebooting || settings.routerPassword.isEmpty)
-            if settings.routerPassword.isEmpty {
-                Text("Add the Device Access Code in Settings to enable reboot.").font(.caption).foregroundStyle(.secondary)
-            }
-            if let s = model.rebootStatus { Text(s).font(.caption) }
-        } header: {
-            Text("Recovery")
         }
+        .font(.caption).foregroundStyle(.secondary)
+        .padding(.top, 20)
     }
 }
 
-struct BaseStationRow: View {
-    var station: BaseStation
+// MARK: - Verification banner
+
+struct VerificationBanner: View {
+    @Environment(DashboardModel.self) private var model
+
     var body: some View {
-        HStack {
-            Image(systemName: "wifi.router").font(.title2).foregroundStyle(station.health.color)
+        let (icon, color, title, detail, showTrust): (String, Color, String, String?, Bool) = {
+            switch model.verification {
+            case .checking: ("hourglass", .secondary, "Checking network identity…", nil, false)
+            case .notConfigured: ("questionmark.diamond.fill", .orange, "Network not yet trusted",
+                                  "Trust it to verify by your base stations' and gateway's MAC addresses.", true)
+            case .verified(let d): ("checkmark.shield.fill", .green, "Verified: your network", d, false)
+            case .mismatch(let d): ("exclamationmark.shield.fill", .red, "Not your network", d, false)
+            }
+        }()
+        HStack(spacing: 12) {
+            Image(systemName: icon).font(.title2).foregroundStyle(color)
             VStack(alignment: .leading, spacing: 2) {
-                Text(station.name).font(.headline)
-                Text("\(station.ipAddress ?? "resolving…") · \(station.modelName)")
-                    .font(.caption).foregroundStyle(.secondary)
-                PingSummary(result: station.ping)
+                Text(title).font(.subheadline.weight(.semibold))
+                if let detail { Text(detail).font(.caption).foregroundStyle(.secondary) }
             }
             Spacer()
-            HealthBadge(health: station.health)
+            if showTrust {
+                Button("Trust") { model.trustCurrentNetwork() }
+                    .buttonStyle(.borderedProminent).controlSize(.small)
+                    .disabled(model.baseStations.isEmpty && model.broadband == nil)
+            }
+        }
+        .padding(12)
+        .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - Reboot
+
+struct RebootButton: View {
+    @Environment(DashboardModel.self) private var model
+    @Environment(AppSettings.self) private var settings
+    var compact = false
+    @State private var confirm = false
+
+    var body: some View {
+        Button(role: .destructive) { confirm = true } label: {
+            if model.rebooting { HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Rebooting…") } }
+            else { Label(compact ? "Reboot" : "Reboot Fiber Gateway", systemImage: "restart.circle") }
+        }
+        .tint(model.internetDown ? .red : nil)
+        .disabled(model.rebooting || settings.routerPassword.isEmpty)
+        .help(settings.routerPassword.isEmpty ? "Add the Device Access Code in Settings to enable reboot." : "Restart the gateway")
+        .confirmationDialog("Reboot the fiber gateway?", isPresented: $confirm, titleVisibility: .visible) {
+            Button("Reboot Gateway", role: .destructive) { Task { await model.rebootRouter() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(model.internetDown
+                 ? "The internet is unreachable. Rebooting takes the whole network offline for a few minutes."
+                 : "The internet currently looks reachable. Rebooting takes the whole network offline for a few minutes.")
         }
     }
 }
 
-struct BaseStationDetail: View {
-    var station: BaseStation
-    var body: some View {
-        List {
-            Section("Status") {
-                LabeledContent("Health") { HealthBadge(health: station.health) }
-                KeyValueRow(key: "IP address", value: station.ipAddress)
-                KeyValueRow(key: "Admin port (5009)", value: station.adminPortLatencyMs.map { String(format: "%.0f ms", $0) } ?? station.adminPortError)
-                LabeledContent("Ping") { PingSummary(result: station.ping) }
-                if let p = station.ping, let mn = p.minMs, let mx = p.maxMs {
-                    KeyValueRow(key: "Min / max", value: String(format: "%.1f / %.1f ms", mn, mx))
-                }
-            }
-            Section("Device") {
-                KeyValueRow(key: "Model", value: station.modelName)
-                KeyValueRow(key: "Firmware", value: station.firmware)
-                KeyValueRow(key: "Wi-Fi network", value: station.networkName)
-                KeyValueRow(key: "5 GHz channel", value: station.channel5)
-                KeyValueRow(key: "2.4 GHz channel", value: station.channel24)
-                KeyValueRow(key: "Ethernet MAC", value: station.ethernetMAC)
-                KeyValueRow(key: "Wireless MAC", value: station.wirelessMAC)
-            }
-            Section("Bonjour TXT Record") {
-                ForEach(station.txt.keys.sorted(), id: \.self) { k in KeyValueRow(key: k, value: station.txt[k]) }
-            }
-        }
-        .navigationTitle(station.name)
+extension Color {
+    static var platformGroupedBackground: Color {
+        #if os(iOS)
+        Color(uiColor: .systemGroupedBackground)
+        #else
+        Color(nsColor: .windowBackgroundColor)
+        #endif
     }
 }

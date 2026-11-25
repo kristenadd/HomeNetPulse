@@ -13,6 +13,8 @@ final class AppSettings {
     var trustedBaseStationMACs: Set<String> { didSet { save() } }
     /// WAN MAC of the fiber gateway, captured when the network was trusted.
     var trustedRouterMAC: String? { didSet { save() } }
+    /// User override for which base station is the main (NAT) router; nil = auto-detect.
+    var mainRouterMAC: String? { didSet { save() } }
 
     var routerURL: String
     var routerPassword: String
@@ -25,6 +27,7 @@ final class AppSettings {
         refreshInterval = interval == 0 ? 60 : interval
         trustedBaseStationMACs = Set(defaults.stringArray(forKey: "trustedMACs") ?? [])
         trustedRouterMAC = defaults.string(forKey: "trustedRouterMAC")
+        mainRouterMAC = defaults.string(forKey: "mainRouterMAC")
         let creds = RouterCredentialStore.load()
         routerURL = creds?.url ?? Self.defaultRouterURL
         routerPassword = creds?.password ?? ""
@@ -35,6 +38,7 @@ final class AppSettings {
         defaults.set(refreshInterval, forKey: "refreshInterval")
         defaults.set(Array(trustedBaseStationMACs).sorted(), forKey: "trustedMACs")
         defaults.set(trustedRouterMAC, forKey: "trustedRouterMAC")
+        defaults.set(mainRouterMAC, forKey: "mainRouterMAC")
     }
 
     @discardableResult

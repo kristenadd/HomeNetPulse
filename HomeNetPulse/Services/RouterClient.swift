@@ -31,7 +31,8 @@ actor RouterClient {
         self.base = base
         self.password = password
         let config = URLSessionConfiguration.ephemeral
-        config.timeoutIntervalForRequest = 8
+        config.timeoutIntervalForRequest = 60    // the gateway is slow: home.ha alone takes ~14 s
+        config.timeoutIntervalForResource = 120
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
         session = URLSession(configuration: config)
@@ -79,13 +80,6 @@ actor RouterClient {
         return html
     }
 
-    /// Quick reachability check of the gateway's web UI.
-    func reachable() async -> (Bool, Double?) {
-        let start = Date()
-        do { _ = try await get("cgi-bin/home.ha"); return (true, Date().timeIntervalSince(start) * 1000) }
-        catch { return (false, nil) }
-    }
-
     func broadband() async throws -> BroadbandSummary {
         let html = try await page("cgi-bin/broadbandstatistics.ha")
         if HTML.isLoginPage(html) {
@@ -96,7 +90,7 @@ actor RouterClient {
     }
 
     /// Ask the gateway itself to ping `host` via cgi-bin/diag.ha and parse the result.
-    func devicePing(_ host: String, timeout: TimeInterval = 30) async throws -> (PingResult, String) {
+    func devicePing(_ host: String, timeout: TimeInterval = 90) async throws -> (PingResult, String) {
         var html = try await page("cgi-bin/diag.ha")
         if HTML.isLoginPage(html) {
             try await login(from: html)

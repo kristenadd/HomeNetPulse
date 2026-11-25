@@ -8,11 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		089D876262091DF43EA6669B /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1115846DC2AD50CFB7B28DCB /* DashboardModel.swift */; };
+		41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */; };
 		46431D160D9DC12761601C42 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241A99A62E03940B089301F /* DashboardView.swift */; };
 		48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DCAC4241147EAFC2417ED3 /* Pinger.swift */; };
 		706F8275AC64ED79D095D119 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D64382380E1319474F1AB3A /* Assets.xcassets */; };
+		8062FC07F869273FEB02AC73 /* DetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */; };
 		9537348C09EEA2D41A35348F /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC525BFC3112189279810E6 /* AppSettings.swift */; };
 		9A3B3C0B0E5E3DBDF19559D5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97EAC894F8A3C2E35BBDDBD5 /* Components.swift */; };
+		A2773AE3E58D61ED9816302B /* DefaultGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F923C74ED423387000E326 /* DefaultGateway.swift */; };
 		B2E423299F7E9C2F32D5DD9D /* ParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D674105107F5F173D5257FF /* ParserTests.swift */; };
 		BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D446C4946455D14D71B9FC /* HomeNetPulseApp.swift */; };
 		C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = F102479F50B7247FB22764AA /* HTML.swift */; };
@@ -35,6 +38,7 @@
 
 /* Begin PBXFileReference section */
 		052681950A63201C88ADCCE8 /* AirPortBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPortBrowser.swift; sourceTree = "<group>"; };
+		0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopologyComponents.swift; sourceTree = "<group>"; };
 		1115846DC2AD50CFB7B28DCB /* DashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardModel.swift; sourceTree = "<group>"; };
 		1E7EADE7387AC70CE245B9BC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2D64382380E1319474F1AB3A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -45,9 +49,11 @@
 		97EAC894F8A3C2E35BBDDBD5 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		9D674105107F5F173D5257FF /* ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParserTests.swift; sourceTree = "<group>"; };
 		A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B9F923C74ED423387000E326 /* DefaultGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultGateway.swift; sourceTree = "<group>"; };
 		C241A99A62E03940B089301F /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		C8A30891B67197536B8A0787 /* HomeNetPulse.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HomeNetPulse.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2DCAC4241147EAFC2417ED3 /* Pinger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pinger.swift; sourceTree = "<group>"; };
+		D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViews.swift; sourceTree = "<group>"; };
 		E3D446C4946455D14D71B9FC /* HomeNetPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeNetPulseApp.swift; sourceTree = "<group>"; };
 		EBE2B88944DF6992CF3F9FC8 /* HomeNetPulseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HomeNetPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDC8A8FAEF10BAF80669BC6D /* HomeNetPulse.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HomeNetPulse.entitlements; sourceTree = "<group>"; };
@@ -76,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				052681950A63201C88ADCCE8 /* AirPortBrowser.swift */,
+				B9F923C74ED423387000E326 /* DefaultGateway.swift */,
 				F102479F50B7247FB22764AA /* HTML.swift */,
 				830FC37B927B98E42F95DCFB /* Keychain.swift */,
 				D2DCAC4241147EAFC2417ED3 /* Pinger.swift */,
@@ -130,7 +137,9 @@
 			children = (
 				97EAC894F8A3C2E35BBDDBD5 /* Components.swift */,
 				C241A99A62E03940B089301F /* DashboardView.swift */,
+				D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */,
 				A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */,
+				0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -243,12 +252,15 @@
 				9A3B3C0B0E5E3DBDF19559D5 /* Components.swift in Sources */,
 				089D876262091DF43EA6669B /* DashboardModel.swift in Sources */,
 				46431D160D9DC12761601C42 /* DashboardView.swift in Sources */,
+				A2773AE3E58D61ED9816302B /* DefaultGateway.swift in Sources */,
+				8062FC07F869273FEB02AC73 /* DetailViews.swift in Sources */,
 				C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */,
 				BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */,
 				F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */,
 				48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */,
 				EE090D3DFBA68BEC1BFE30C4 /* RouterClient.swift in Sources */,
 				F3201B7AE31F9EB8519F3936 /* SettingsView.swift in Sources */,
+				41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
