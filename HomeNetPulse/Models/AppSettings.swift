@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import Security
 
 /// Non-secret preferences, persisted in UserDefaults.
 @MainActor @Observable
@@ -42,12 +43,12 @@ final class AppSettings {
     }
 
     @discardableResult
-    func saveRouterCredentials(url: String, password: String) -> Bool {
+    func saveRouterCredentials(url: String, password: String) -> OSStatus {
         var trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.lowercased().hasPrefix("http") { trimmed = "http://" + trimmed }
         routerURL = trimmed
         routerPassword = password
-        return RouterCredentialStore.save(.init(url: trimmed, password: password)) == errSecSuccess
+        return RouterCredentialStore.save(.init(url: trimmed, password: password))
     }
 
     var routerBaseURL: URL? {

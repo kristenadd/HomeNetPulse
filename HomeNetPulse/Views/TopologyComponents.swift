@@ -54,21 +54,21 @@ struct TopologyNode<Content: View, Accessory: View>: View {
             HStack(alignment: .center, spacing: 12) {
                 NodeIcon(systemName: icon, health: health, size: Topology.iconSize)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.headline)
+                    Text(title).font(.headline).lineLimit(1).minimumScaleFactor(0.8)
                     if let subtitle {
                         Text(subtitle).font(.subheadline.monospaced()).foregroundStyle(.secondary)
                             .lineLimit(1).truncationMode(.middle)
                     }
                 }
                 Spacer(minLength: 8)
-                HealthPill(health: health, text: statusText)
+                HealthPill(health: health, text: statusText).fixedSize()
                 accessory
             }
             content
         }
         .padding(Topology.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .strokeBorder(health == .unknown ? Color.secondary.opacity(0.2) : health.color.opacity(0.35), lineWidth: 1)
@@ -138,7 +138,20 @@ struct MetricGrid: View {
 extension PingResult {
     var shortSummary: String {
         guard received > 0, let avg = avgMs else { return "no reply" }
-        return lossPercent > 0 ? String(format: "%.0f ms · %.0f%% loss", avg, lossPercent) : String(format: "%.0f ms", avg)
+        let ms = avg < 10 ? String(format: "%.1f ms", avg) : String(format: "%.0f ms", avg)
+        return lossPercent > 0 ? String(format: "%@ · %.0f%% loss", ms, lossPercent) : ms
     }
     var tint: Color? { health == .good ? nil : health.color }
+}
+
+extension View {
+    /// Accent outline marking the card whose details are open in the inspector.
+    func selectedOutline(_ selected: Bool, cornerRadius: CGFloat = 16) -> some View {
+        overlay {
+            if selected {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(Color.accentColor, lineWidth: 2)
+            }
+        }
+    }
 }

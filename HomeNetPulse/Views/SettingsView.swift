@@ -1,4 +1,8 @@
 import SwiftUI
+import Security
+#if os(macOS)
+import AppKit
+#endif
 
 struct SettingsView: View {
     @Environment(DashboardModel.self) private var model
@@ -6,7 +10,7 @@ struct SettingsView: View {
     @State private var routerURL = ""
     @State private var password = ""
     @State private var newTarget = ""
-    @State private var saveMessage: String?
+    @State private var saveMessage: (ok: Bool, text: String)?
 
     var body: some View {
         @Bindable var settings = settings
@@ -20,13 +24,20 @@ struct SettingsView: View {
                     .textInputAutocapitalization(.never)
                     #endif
                 SecureField("Device Access Code", text: $password)
-                Button("Save to Keychain") {
-                    let ok = settings.saveRouterCredentials(url: routerURL, password: password)
-                    saveMessage = ok ? "Saved to Keychain." : "Could not save to Keychain."
-                    Task { await model.refreshRouter() }
+                    .onSubmit(saveCredentials)
+                HStack {
+                    if let saveMessage {
+                        Label(saveMessage.text, systemImage: saveMessage.ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                            .font(.caption).foregroundStyle(saveMessage.ok ? .green : .red)
+                    } else if !settings.routerPassword.isEmpty && password == settings.routerPassword {
+                        Label("Access code saved in Keychain", systemImage: "key.fill")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Save", action: saveCredentials)
+                        .keyboardShortcut("s")
+                        .disabled(routerURL.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
-                .disabled(routerURL.isEmpty)
-                if let saveMessage { Text(saveMessage).font(.caption).foregroundStyle(.secondary) }
             } header: {
                 Text("Fiber Gateway")
             } footer: {
@@ -84,6 +95,31 @@ struct SettingsView: View {
             routerURL = settings.routerURL
             password = settings.routerPassword
         }
+        // Never lose a typed access code: save when the sheet / window closes.
+        .onDisappear { if hasUnsavedCredentials { performSave() } }
+    }
+
+    private var hasUnsavedCredentials: Bool {
+        routerURL != settings.routerURL || password != settings.routerPassword
+    }
+
+    private func saveCredentials() {
+        #if os(macOS)
+        // Pasted / password-manager-filled text can sit in the field editor without reaching the
+        // binding until editing ends, so end editing first and save on the next run-loop turn.
+        NSApp.keyWindow?.makeFirstResponder(nil)
+        #endif
+        DispatchQueue.main.async { performSave() }
+    }
+
+    private func performSave() {
+        guard !routerURL.isEmpty else { return }
+        password = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        let status = settings.saveRouterCredentials(url: routerURL, password: password)
+        saveMessage = status == errSecSuccess
+            ? (true, "Saved to Keychain")
+            : (false, "Keychain error \(status): \(SecCopyErrorMessageString(status, nil) as String? ?? "unknown")")
+        Task { await model.refreshRouter() }
     }
 
     private func addTarget() {

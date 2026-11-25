@@ -9,9 +9,46 @@ struct DashboardView: View {
     @Environment(DashboardModel.self) private var model
     @Environment(AppSettings.self) private var settings
     @State private var showSettings = false
+    @State private var path = NavigationPath()
+    @State private var inspected: Route?
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
+
+    /// Mac and iPad show details in a side inspector; iPhone pushes a new screen.
+    private var usesInspector: Bool {
+        #if os(macOS)
+        true
+        #else
+        horizontalSizeClass == .regular
+        #endif
+    }
+
+    private func open(_ route: Route) {
+        if usesInspector {
+            withAnimation(.snappy) { inspected = (inspected == route) ? nil : route }
+        } else {
+            path.append(route)
+        }
+    }
+
+    private var inspectorShown: Binding<Bool> {
+        Binding(get: { usesInspector && inspected != nil },
+                set: { if !$0 { inspected = nil } })
+    }
+
+    @ViewBuilder private func destination(_ route: Route, inInspector: Bool) -> some View {
+        let close: (() -> Void)? = inInspector ? { withAnimation(.snappy) { inspected = nil } } : nil
+        switch route {
+        case .gateway: GatewayDetailView(onClose: close)
+        case .station(let id):
+            if let s = model.baseStations.first(where: { $0.id == id }) { BaseStationDetail(station: s, onClose: close) }
+            else { ContentUnavailableView("Base station not found", systemImage: "wifi.router") }
+        }
+    }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 0) {
                     VerificationBanner()
@@ -35,13 +72,12 @@ struct DashboardView: View {
             }
             .background(Color.platformGroupedBackground)
             .navigationTitle("HomeNet Pulse")
-            .navigationDestination(for: Route.self) { route in
-                switch route {
-                case .gateway: GatewayDetailView()
-                case .station(let id):
-                    if let s = model.baseStations.first(where: { $0.id == id }) { BaseStationDetail(station: s) }
-                    else { ContentUnavailableView("Base station not found", systemImage: "wifi.router") }
+            .navigationDestination(for: Route.self) { destination($0, inInspector: false) }
+            .inspector(isPresented: inspectorShown) {
+                Group {
+                    if let inspected { destination(inspected, inInspector: true) }
                 }
+                .inspectorColumnWidth(min: 340, ideal: 400, max: 520)
             }
             .refreshable { await model.refresh() }
             .toolbar {
@@ -60,7 +96,12 @@ struct DashboardView: View {
             .sheet(isPresented: $showSettings) {
                 NavigationStack {
                     SettingsView()
-                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showSettings = false } } }
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") {
+                            #if os(macOS)
+                            NSApp.keyWindow?.makeFirstResponder(nil)   // commit a pasted access code before closing
+                            #endif
+                            DispatchQueue.main.async { showSettings = false }
+                        } } }
                 }
                 #if os(macOS)
                 .frame(minWidth: 520, minHeight: 620)
@@ -109,26 +150,43 @@ struct DashboardView: View {
                         .font(.caption).foregroundStyle(.orange)
                         .padding(.leading, Topology.iconSize + 12)
                 }
-                HStack(spacing: 10) {
-                    Button {
-                        Task { await model.runDevicePings() }
-                    } label: {
-                        if model.devicePings.contains(where: \.running) {
-                            HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Pinging…") }
-                        } else {
-                            Label("Ping from Gateway", systemImage: "dot.radiowaves.left.and.right")
-                        }
-                    }
-                    .disabled(model.devicePings.contains(where: \.running) || model.routerReachable != true)
-                    RebootButton(compact: true)
-                    Spacer()
-                    NavigationLink(value: Route.gateway) { Label("Details", systemImage: "chevron.right").labelStyle(.titleOnly) }
+                ViewThatFits(in: .horizontal) {
+                    gatewayActions(compact: false)
+                    gatewayActions(compact: true)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .lineLimit(1)
                 .padding(.leading, Topology.iconSize + 12)
             }
         }
+        .selectedOutline(inspected == .gateway)
+    }
+
+    private func gatewayActions(compact: Bool) -> some View {
+        HStack(spacing: 8) {
+            Button {
+                Task { await model.runDevicePings() }
+            } label: {
+                if model.devicePings.contains(where: \.running) {
+                    HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Pinging…") }
+                } else {
+                    Label(compact ? "Ping" : "Ping from Gateway", systemImage: "dot.radiowaves.left.and.right")
+                }
+            }
+            .disabled(model.devicePings.contains(where: \.running) || model.routerReachable != true)
+            RebootButton(compact: true)
+            Spacer(minLength: 0)
+            Button { open(.gateway) } label: {
+                if compact {
+                    Image(systemName: usesInspector ? "sidebar.trailing" : "chevron.right")
+                        .accessibilityLabel("Details")
+                } else {
+                    Label("Details", systemImage: usesInspector ? "sidebar.trailing" : "chevron.right")
+                }
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     static func formatSpeed(_ mbps: String) -> String {
@@ -140,11 +198,13 @@ struct DashboardView: View {
 
     @ViewBuilder private var routerNode: some View {
         if let r = model.mainRouter {
-            NavigationLink(value: Route.station(r.id)) {
+            Button { open(.station(r.id)) } label: {
                 TopologyNode(title: r.name, subtitle: r.ipAddress ?? "resolving…", icon: "wifi.router.fill", health: r.health,
                              content: { stationMetrics(r) }, accessory: { chevron })
+                    .contentShape(RoundedRectangle(cornerRadius: 16))
             }
             .buttonStyle(.plain)
+            .selectedOutline(inspected == .station(r.id))
         } else {
             TopologyNode(title: "Router", subtitle: model.discoveryError ?? "Searching for AirPort base stations…",
                          icon: "wifi.router", health: .unknown) { EmptyView() }
@@ -158,26 +218,27 @@ struct DashboardView: View {
                      icon: "point.3.connected.trianglepath.dotted", health: model.extendersHealth) {
             VStack(spacing: 8) {
                 ForEach(model.extenders) { s in
-                    NavigationLink(value: Route.station(s.id)) {
+                    Button { open(.station(s.id)) } label: {
                         HStack(spacing: 12) {
                             NodeIcon(systemName: "wifi.router", health: s.health, size: 32)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(s.name).font(.subheadline.weight(.semibold))
-                                Text("\(s.ipAddress ?? "resolving…") · \(s.modelName)").font(.caption).foregroundStyle(.secondary)
+                                Text(s.name).font(.subheadline.weight(.semibold)).lineLimit(1)
+                                Text([s.ipAddress ?? "resolving…", s.ping?.shortSummary].compactMap { $0 }.joined(separator: " · "))
+                                    .font(.caption.monospacedDigit()).foregroundStyle(s.ping?.tint ?? .secondary).lineLimit(1)
+                                Text(s.modelName).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                             }
-                            Spacer()
-                            Text(s.ping?.shortSummary ?? "—").font(.caption.monospacedDigit()).foregroundStyle(s.ping?.tint ?? .secondary)
-                            HealthPill(health: s.health)
+                            Spacer(minLength: 4)
+                            HealthPill(health: s.health).fixedSize()
                             chevron
                         }
                         .padding(10)
-                        .background(.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .background(Color.insetBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .selectedOutline(inspected == .station(s.id), cornerRadius: 10)
                 }
             }
-            .padding(.leading, Topology.iconSize + 12)
         }
     }
 
@@ -187,12 +248,13 @@ struct DashboardView: View {
             .init(label: "Model", value: s.modelName),
             .init(label: "Firmware", value: s.firmware),
             .init(label: "Wi-Fi", value: s.networkName),
-            .init(label: "Channels", value: [s.channel5.map { "5G \($0)" }, s.channel24.map { "2.4G \($0)" }].compactMap { $0 }.joined(separator: " · ").nilIfEmpty),
+            .init(label: "5 GHz", value: s.channel5.map { "Channel \($0)" }),
+            .init(label: "2.4 GHz", value: s.channel24.map { "Channel \($0)" }),
         ])
     }
 
     private var chevron: some View {
-        Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+        Image(systemName: usesInspector ? "sidebar.trailing" : "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
     }
 
     private var footer: some View {
@@ -269,6 +331,22 @@ struct RebootButton: View {
 }
 
 extension Color {
+    /// Raised card surface: white on iOS grouped backgrounds, subtle grey on macOS.
+    static var cardBackground: Color {
+        #if os(iOS)
+        Color(uiColor: .secondarySystemGroupedBackground)
+        #else
+        Color.primary.opacity(0.04)
+        #endif
+    }
+    /// Surface for rows nested inside a card.
+    static var insetBackground: Color {
+        #if os(iOS)
+        Color(uiColor: .tertiarySystemGroupedBackground)
+        #else
+        Color(nsColor: .textBackgroundColor)
+        #endif
+    }
     static var platformGroupedBackground: Color {
         #if os(iOS)
         Color(uiColor: .systemGroupedBackground)
