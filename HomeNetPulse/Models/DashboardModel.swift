@@ -37,6 +37,14 @@ final class DashboardModel {
     var lastRefresh: Date?
     var rebootStatus: String?
     var rebooting = false
+    /// Gateway speed test (cgi-bin/speed.ha).
+    var speedHistory: [SpeedTestEntry] = []
+    var speedTestRunning = false
+    var speedTestError: String?
+    private var lastSpeedHistoryFetch: Date?
+    var speedRuns: [SpeedTestRun] { SpeedTestParser.runs(from: speedHistory) }
+    var latestSpeedRun: SpeedTestRun? { speedRuns.first }
+
     /// This device's Wi-Fi connection and the base station it is associated with.
     var wifi: WiFiStatus?
     var connectedStationID: String?
@@ -242,6 +250,11 @@ final class DashboardModel {
             routerError = error.localizedDescription
         }
         routerPing = await icmp
+        // Speed history needs a login, so only re-read it occasionally.
+        if routerReachable == true, !settings.routerPassword.isEmpty,
+           lastSpeedHistoryFetch.map({ Date().timeIntervalSince($0) > 15 * 60 }) ?? true {
+            await loadSpeedHistory()
+        }
         rebuildDevicePingList()
     }
 
@@ -270,6 +283,38 @@ final class DashboardModel {
                 devicePings[i].error = error.localizedDescription
             }
             devicePings[i].running = false
+        }
+    }
+
+    func loadSpeedHistory() async {
+        guard let client = routerClient else { return }
+        guard !settings.routerPassword.isEmpty else {
+            speedTestError = RouterError.missingPassword.localizedDescription
+            return
+        }
+        do {
+            speedHistory = try await client.speedTestHistory()
+            lastSpeedHistoryFetch = Date()
+            speedTestError = nil
+        } catch {
+            speedTestError = error.localizedDescription
+        }
+    }
+
+    func runSpeedTest() async {
+        guard let client = routerClient, !speedTestRunning else { return }
+        guard !settings.routerPassword.isEmpty else {
+            speedTestError = RouterError.missingPassword.localizedDescription
+            return
+        }
+        speedTestRunning = true
+        speedTestError = nil
+        defer { speedTestRunning = false }
+        do {
+            speedHistory = try await client.runSpeedTest()
+            lastSpeedHistoryFetch = Date()
+        } catch {
+            speedTestError = error.localizedDescription
         }
     }
 

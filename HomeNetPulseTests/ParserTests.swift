@@ -54,6 +54,36 @@ final class ParserTests: XCTestCase {
         XCTAssertNil(ConnectionMatcher.match(WiFiStatus(channel: 112, band: .ghz5), in: [tc, other]))
     }
 
+    func testSpeedTestParsing() {
+        let html = """
+        <form method="post" action="/cgi-bin/speed.ha"><input type="hidden" name="hidden" value="" />
+        <table class="grid table100" summary="Table of Speed Test Result History"><thead><tr><th>Test Completion Time</th></tr></thead>
+        <tbody>
+        <tr class="b"><td scope="row" class="heading" width="47%">
+            11/24/2026 20:16:28</td><td>downstream</td><td> 1295.540000</td><td> 28</td><td> 26.000000</td><td> Success</td></tr>
+        <tr class="a"><td scope="row" class="heading" width="47%">
+            11/24/2026 20:16:15</td><td>upstream</td><td> 1290.290000</td><td> 28</td><td> 16.000000</td><td> Success</td></tr>
+        <tr class="b"><td scope="row" class="heading" width="47%">
+            11/19/2026 10:46:43</td><td>upstream</td><td> 1271.690000</td><td> 28</td><td> 19.000000</td><td> Success</td></tr>
+        <tr class="a"><td scope="row" class="heading" width="47%">
+            11/19/2026 10:46:35</td><td>downstream</td><td> 1295.520000</td><td> 28</td><td> 26.000000</td><td> Success</td></tr>
+        </tbody></table></form>
+        """
+        let entries = SpeedTestParser.parse(html)
+        XCTAssertEqual(entries.count, 4)
+        XCTAssertEqual(entries[0].mbps, 1295.54)
+        XCTAssertTrue(entries[0].isDownload)
+        XCTAssertEqual(entries[1].latencyMs, 16)
+        let runs = SpeedTestParser.runs(from: entries)
+        XCTAssertEqual(runs.count, 2)
+        XCTAssertEqual(runs[0].download?.mbps, 1295.54)
+        XCTAssertEqual(runs[0].upload?.mbps, 1290.29)
+        XCTAssertEqual(runs[0].latencyMs, 21)
+        XCTAssertEqual(DashboardView.speedSummary(runs[0]), "↓1296 ↑1290 Mbps")
+        XCTAssertFalse(SpeedTestParser.isRunning(html))
+        XCTAssertTrue(SpeedTestParser.isRunning(#"<input type="hidden" name="hidden" value="freshen" />"#))
+    }
+
     func testPONState() {
         var s = BroadbandSummary(sections: [StatSection(title: "GPON Status", rows: [StatRow(key: "PON Link Status", value: "OPERATION (O5)")])])
         XCTAssertEqual(s.ponFriendly, "Connected (O5)")

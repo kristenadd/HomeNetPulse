@@ -38,6 +38,8 @@ struct GatewayDetailView: View {
                     .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
             }
 
+            SpeedTestSection()
+
             DetailCard(title: "Broadband", systemImage: "network") {
                 DetailRow(key: "WAN IPv4", value: b?.wanIPv4)
                 DetailRow(key: "ISP gateway", value: b?.gatewayIPv4)
@@ -267,6 +269,91 @@ struct InternetDetailView: View {
                     DetailRow(key: "Secondary DNS", value: b.secondaryDNS, last: true)
                 }
             }
+        }
+    }
+}
+
+/// Run the gateway's built-in speed test and show its history.
+struct SpeedTestSection: View {
+    @Environment(DashboardModel.self) private var model
+    @Environment(AppSettings.self) private var settings
+    @State private var confirm = false
+
+    private static let mbps = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(0))
+
+    var body: some View {
+        let latest = model.latestSpeedRun
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("Speed Test", systemImage: "speedometer")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                Spacer()
+                Button {
+                    confirm = true
+                } label: {
+                    if model.speedTestRunning {
+                        HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Testing…") }
+                    } else {
+                        Text("Run Speed Test")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .disabled(model.speedTestRunning || settings.routerPassword.isEmpty || model.routerReachable != true)
+            }
+
+            StatTileGrid {
+                StatTile(label: "Download", value: latest?.download?.mbps?.formatted(Self.mbps) ?? "—", unit: "Mbps",
+                         tint: latest?.download?.succeeded == false ? .red : nil)
+                StatTile(label: "Upload", value: latest?.upload?.mbps?.formatted(Self.mbps) ?? "—", unit: "Mbps",
+                         tint: latest?.upload?.succeeded == false ? .red : nil)
+                StatTile(label: "Latency", value: latest?.latencyMs?.formatted(Self.mbps) ?? "—", unit: "ms")
+                StatTile(label: "Last tested", value: latest?.time.map { $0.formatted(.relative(presentation: .named)) } ?? "—")
+            }
+
+            if model.speedTestRunning {
+                Label("The gateway is testing upload, then download. This takes about 30 seconds.", systemImage: "hourglass")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else if let err = model.speedTestError {
+                Label(err, systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
+            } else if settings.routerPassword.isEmpty {
+                Text("Add the Device Access Code in Settings to run speed tests.").font(.caption).foregroundStyle(.secondary)
+            }
+
+            if model.speedRuns.count > 1 {
+                CollapsibleCard(title: "History (\(model.speedRuns.count))", systemImage: "clock.arrow.circlepath") {
+                    ForEach(Array(model.speedRuns.enumerated()), id: \.element.id) { i, run in
+                        VStack(spacing: 0) {
+                            HStack(spacing: 10) {
+                                Text(run.time.map { $0.formatted(.dateTime.month(.abbreviated).day().hour().minute()) } ?? run.timeText)
+                                    .font(.callout).lineLimit(1)
+                                Spacer()
+                                Text(DashboardView.speedSummary(run)).font(.callout.monospacedDigit())
+                                    .foregroundStyle(run.succeeded ? Color.primary : .red)
+                                if let l = run.latencyMs {
+                                    Text("\(Int(l.rounded())) ms").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                                        .frame(minWidth: 44, alignment: .trailing)
+                                }
+                            }
+                            .padding(.vertical, 9)
+                            .copyMenu(title: "Speed test", items: [
+                                .init(label: "Time", value: run.timeText),
+                                .init(label: "Download", value: run.download?.mbps.map { "\($0) Mbps" }),
+                                .init(label: "Upload", value: run.upload?.mbps.map { "\($0) Mbps" }),
+                                .init(label: "Latency", value: run.latencyMs.map { "\($0) ms" }),
+                            ])
+                            if i < model.speedRuns.count - 1 { Divider() }
+                        }
+                    }
+                }
+            }
+        }
+        .task { if model.speedHistory.isEmpty && !settings.routerPassword.isEmpty { await model.loadSpeedHistory() } }
+        .confirmationDialog("Run a speed test from the gateway?", isPresented: $confirm, titleVisibility: .visible) {
+            Button("Run Speed Test") { Task { await model.runSpeedTest() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("For about 30 seconds the test uses your full connection, so video calls and streaming may stutter. Results are also lower while other devices are busy.")
         }
     }
 }

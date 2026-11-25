@@ -25,6 +25,7 @@
 		BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D446C4946455D14D71B9FC /* HomeNetPulseApp.swift */; };
 		C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = F102479F50B7247FB22764AA /* HTML.swift */; };
 		C87486E276CD084CE8D7064F /* AirPortBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052681950A63201C88ADCCE8 /* AirPortBrowser.swift */; };
+		DCE9B910C458CD5CA806824C /* SpeedTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78FCFD6DFB79CF0B71880FA7 /* SpeedTest.swift */; };
 		EE090D3DFBA68BEC1BFE30C4 /* RouterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67845DEF76D4E358F881D2DD /* RouterClient.swift */; };
 		F1098C6A3A61639ECFB2A54C /* Copyable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597FB1E91702595566112483 /* Copyable.swift */; };
 		F3201B7AE31F9EB8519F3936 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */; };
@@ -56,6 +57,7 @@
 		5F8EF5CD90A38C92CD2DEE3F /* BaseStation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseStation.swift; sourceTree = "<group>"; };
 		67845DEF76D4E358F881D2DD /* RouterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterClient.swift; sourceTree = "<group>"; };
 		7187496DA1D907A9A5265FAA /* HomeNetPulse-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "HomeNetPulse-iOS.entitlements"; sourceTree = "<group>"; };
+		78FCFD6DFB79CF0B71880FA7 /* SpeedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedTest.swift; sourceTree = "<group>"; };
 		830FC37B927B98E42F95DCFB /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		97EAC894F8A3C2E35BBDDBD5 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		9D674105107F5F173D5257FF /* ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParserTests.swift; sourceTree = "<group>"; };
@@ -101,6 +103,7 @@
 				354FB903E0966AD129675B24 /* LocationAccess.swift */,
 				D2DCAC4241147EAFC2417ED3 /* Pinger.swift */,
 				67845DEF76D4E358F881D2DD /* RouterClient.swift */,
+				78FCFD6DFB79CF0B71880FA7 /* SpeedTest.swift */,
 				EBFCEC33E34F57F8981AB4EF /* WiFiStatus.swift */,
 			);
 			path = Services;
@@ -285,6 +288,7 @@
 				48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */,
 				EE090D3DFBA68BEC1BFE30C4 /* RouterClient.swift in Sources */,
 				F3201B7AE31F9EB8519F3936 /* SettingsView.swift in Sources */,
+				DCE9B910C458CD5CA806824C /* SpeedTest.swift in Sources */,
 				41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */,
 				27CD2C0CC642EA57642D9D6E /* WiFiStatus.swift in Sources */,
 			);

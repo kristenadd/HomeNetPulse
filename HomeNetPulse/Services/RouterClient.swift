@@ -114,6 +114,52 @@ actor RouterClient {
         return (DiagPingParser.parse(text, host: host), text)
     }
 
+    /// Fetch a page that may require the Device Access Code.
+    private func authenticatedPage(_ path: String) async throws -> String {
+        var html = try await page(path)
+        if HTML.isLoginPage(html) {
+            try await login(from: html)
+            html = try await page(path)
+            if HTML.isLoginPage(html) { throw RouterError.loginFailed }
+        }
+        return html
+    }
+
+    /// Speed test history from cgi-bin/speed.ha (newest first).
+    func speedTestHistory() async throws -> [SpeedTestEntry] {
+        SpeedTestParser.parse(try await authenticatedPage("cgi-bin/speed.ha"))
+    }
+
+    /// Run the gateway's own speed test and wait for its results (typically ~30 s).
+    func runSpeedTest(timeout: TimeInterval = 180) async throws -> [SpeedTestEntry] {
+        let html = try await authenticatedPage("cgi-bin/speed.ha")
+        let before = SpeedTestParser.parse(html).first?.id
+        guard let nonce = HTML.nonce(in: html) else { throw RouterError.unexpectedPage("speed test form missing") }
+        let button = HTML.submitButtons(in: html).first { $0.name == "run" || $0.value.localizedCaseInsensitiveContains("speed") }
+            ?? (name: "run", value: "Run Speed Test")
+        _ = try await post("cgi-bin/speed.ha", form: [("nonce", nonce), ("hidden", ""), (button.name, button.value)])
+
+        let start = Date()
+        let deadline = start.addingTimeInterval(timeout)
+        var sawRunning = false
+        while Date() < deadline {
+            try await Task.sleep(for: .seconds(5))
+            let page = try await authenticatedPage("cgi-bin/speed.ha")
+            let running = SpeedTestParser.isRunning(page)
+            sawRunning = sawRunning || running
+            let entries = SpeedTestParser.parse(page)
+            // Done when the page stopped refreshing and the history has new rows.
+            if !running, let top = entries.first?.id, top != before {
+                return entries
+            }
+            // The gateway never showed a running test after a minute: give back what it has.
+            if !running && !sawRunning && Date().timeIntervalSince(start) > 60 {
+                return entries
+            }
+        }
+        throw RouterError.unexpectedPage("speed test did not finish within \(Int(timeout)) s")
+    }
+
     /// Log in with the Device Access Code: hashpassword = md5(password + nonce), password masked with '*'.
     private func login(from loginPage: String) async throws {
         guard !password.isEmpty else { throw RouterError.missingPassword }
@@ -132,12 +178,7 @@ actor RouterClient {
 
     /// Restart the gateway via cgi-bin/restart.ha (requires the Device Access Code).
     func restart() async throws -> String {
-        var html = try await page("cgi-bin/restart.ha")
-        if HTML.isLoginPage(html) {
-            try await login(from: html)
-            html = try await page("cgi-bin/restart.ha")
-            if HTML.isLoginPage(html) { throw RouterError.loginFailed }
-        }
+        let html = try await authenticatedPage("cgi-bin/restart.ha")
         guard let nonce = HTML.nonce(in: html),
               let button = HTML.submitButtons(in: html).first(where: {
                   $0.name.localizedCaseInsensitiveContains("restart") || $0.value.localizedCaseInsensitiveContains("restart")

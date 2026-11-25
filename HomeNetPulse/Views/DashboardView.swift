@@ -161,7 +161,8 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 12) {
                 MetricGrid(items: [
                     .init(label: "Line", value: b?.lineState, tint: b?.lineState?.lowercased().contains("up") == true ? .green : nil),
-                    .init(label: "Speed", value: b?.speedMbps.map { Self.formatSpeed($0) }),
+                    .init(label: "Link", value: b?.speedMbps.map { Self.formatSpeed($0) }),
+                    .init(label: "Speed Test", value: model.speedTestRunning ? "Testing…" : model.latestSpeedRun.map(Self.speedSummary)),
                     .init(label: "Fiber (PON)", value: b?.ponFriendly,
                           tint: b?.ponHealthy.map { $0 ? Color.green : Color.red }),
                     .init(label: "ISP Gateway", value: b?.gatewayIPv4),
@@ -227,6 +228,13 @@ struct DashboardView: View {
             .init(label: "Firmware", value: s.firmware),
             .init(label: "Model", value: s.modelName),
         ]
+    }
+
+    /// "↓1296 ↑1290 Mbps"
+    static func speedSummary(_ run: SpeedTestRun) -> String {
+        let d = run.download?.mbps.map { "↓\(Int($0.rounded()))" }
+        let u = run.upload?.mbps.map { "↑\(Int($0.rounded()))" }
+        return ([d, u].compactMap { $0 } + ["Mbps"]).joined(separator: " ")
     }
 
     static func formatSpeed(_ mbps: String) -> String {
