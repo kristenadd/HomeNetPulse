@@ -63,8 +63,8 @@ extension View {
     func tappableCard(_ action: @escaping () -> Void) -> some View {
         self
             .onTapGesture(perform: action)
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction(.default, action)
+            // Keep the card's own buttons (Ping, Reboot, Details…) individually accessible.
+            .accessibilityElement(children: .contain)
+            .accessibilityAction(named: "Show Details", action)
     }
 }

@@ -183,6 +183,8 @@ struct DashboardView: View {
                 .padding(.leading, Topology.iconSize + 12)
             }
         }
+        .contentShape(RoundedRectangle(cornerRadius: 16))
+        .tappableCard { open(.gateway) }
         .selectedOutline(inspected == .gateway)
         .copyMenu(title: "Fiber Gateway", items: [
             .init(label: "Gateway Address", value: settings.routerBaseURL?.host()),
