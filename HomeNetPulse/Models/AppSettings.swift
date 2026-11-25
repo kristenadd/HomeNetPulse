@@ -32,8 +32,8 @@ final class AppSettings {
         trustedBaseStationMACs = Set(defaults.stringArray(forKey: "trustedMACs") ?? [])
         trustedRouterMAC = defaults.string(forKey: "trustedRouterMAC")
         mainRouterMAC = defaults.string(forKey: "mainRouterMAC")
-        showMenuBarIcon = defaults.object(forKey: "showMenuBarIcon") as? Bool ?? true
-        showLatencyInMenuBar = defaults.object(forKey: "showLatencyInMenuBar") as? Bool ?? true
+        showMenuBarIcon = defaults.object(forKey: "showMenuBarIcon") == nil ? true : defaults.bool(forKey: "showMenuBarIcon")
+        showLatencyInMenuBar = defaults.object(forKey: "showLatencyInMenuBar") == nil ? true : defaults.bool(forKey: "showLatencyInMenuBar")
         let creds = RouterCredentialStore.load()
         routerURL = creds?.url ?? Self.defaultRouterURL
         routerPassword = creds?.password ?? ""
