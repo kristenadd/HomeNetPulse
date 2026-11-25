@@ -12,6 +12,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# CI only: a local release build is a second copy of com.kristenadd.HomeNetPulse on this Mac, which
+# confuses macOS permissions for the notarized app in /Applications. Set ALLOW_LOCAL_RELEASE=1 to
+# override (and delete build/release afterwards).
+if [ -z "${CI:-}" ] && [ "${ALLOW_LOCAL_RELEASE:-0}" != 1 ]; then
+    echo "error: release builds run in GitHub Actions. Use scripts/run-debug-mac.sh to test locally." >&2
+    exit 1
+fi
+
 APP_NAME="HomeNetPulse"
 TEAM_ID="B4H429V95D"
 OUT="build/release"

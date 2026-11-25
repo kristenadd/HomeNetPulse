@@ -17,6 +17,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# CI only: a local release build is a second copy of com.kristenadd.HomeNetPulse on this Mac, which
+# confuses macOS permissions for the notarized app in /Applications. Set ALLOW_LOCAL_RELEASE=1 to
+# override (and delete build/release afterwards).
+if [ -z "${CI:-}" ] && [ "${ALLOW_LOCAL_RELEASE:-0}" != 1 ]; then
+    echo "error: release builds run in GitHub Actions. Use scripts/run-debug-mac.sh to test locally." >&2
+    exit 1
+fi
+
 APP_NAME="HomeNetPulse"
 DISPLAY_NAME="HomeNet Pulse"
 TEAM_ID="B4H429V95D"
@@ -51,7 +59,7 @@ mkdir -p "$OUT"
 step "Archiving"
 xcodebuild archive -quiet \
     -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" -configuration Release \
-    -destination 'generic/platform=macOS' -archivePath "$ARCHIVE" \
+    -destination 'generic/platform=macOS' -archivePath "$ARCHIVE" -derivedDataPath "$OUT/DerivedData" \
     CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" DEVELOPMENT_TEAM="$TEAM_ID" \
     PROVISIONING_PROFILE_SPECIFIER= CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO OTHER_CODE_SIGN_FLAGS="--timestamp" \
     MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD_NUMBER"

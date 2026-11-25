@@ -38,6 +38,8 @@ This downloads the notarized DMG from the GitHub release, checks that Gatekeeper
 
 ## Testing local changes
 
+Only one copy of the release app (`com.kristenadd.HomeNetPulse`) should exist on the Mac: the notarized one in `/Applications`. Two copies with the same ID at different paths, one notarized and one not, confuse macOS permissions. So the release scripts refuse to run outside GitHub Actions, and `install-ios.sh` deletes its device build after installing. Avoid **Product ▸ Archive** in Xcode for the Mac for the same reason.
+
 On the Mac, Debug builds are a separate app, **HomeNet Pulse (Debug)** (`com.kristenadd.HomeNetPulse.debug`), with their own settings, Keychain item and permissions, so testing never touches the notarized release in `/Applications`. iPhone and iPad have just one app, `com.kristenadd.HomeNetPulse`, whether it comes from Firebase or from `install-ios.sh`.
 
 ```bash

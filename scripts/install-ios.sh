@@ -9,9 +9,13 @@ launch=0
 if [ "${1:-}" = "--launch" ]; then launch=1; shift; fi
 cd "$(dirname "$0")/.."
 xcodegen generate -q
+# Built in a throwaway folder and deleted afterwards, so no extra com.kristenadd.HomeNetPulse bundle
+# lingers on the Mac next to the notarized app in /Applications.
+DD=build/ios-device
+trap 'rm -rf "$DD"' EXIT
 xcodebuild -project HomeNetPulse.xcodeproj -scheme HomeNetPulse -configuration Release \
-  -destination 'generic/platform=iOS' -derivedDataPath build -allowProvisioningUpdates build -quiet
-APP=build/Build/Products/Release-iphoneos/HomeNetPulse.app
+  -destination 'generic/platform=iOS' -derivedDataPath "$DD" -allowProvisioningUpdates build -quiet
+APP=$DD/Build/Products/Release-iphoneos/HomeNetPulse.app
 
 if [ $# -gt 0 ]; then
   devices="$*"
