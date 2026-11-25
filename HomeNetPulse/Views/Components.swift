@@ -64,7 +64,7 @@ struct KeyValueRow: View {
     var value: String?
     var body: some View {
         LabeledContent(key) {
-            Text(value ?? "—").textSelection(.enabled).monospacedDigit()
+            Text(value ?? "—").monospacedDigit().copyable(value, label: key)
         }
     }
 }

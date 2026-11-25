@@ -13,9 +13,9 @@ struct DetailHeader: View {
         HStack(alignment: .top, spacing: 14) {
             NodeIcon(systemName: icon, health: health, size: 56)
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.title2.weight(.bold)).lineLimit(2)
+                Text(title).font(.title2.weight(.bold)).lineLimit(2).copyable(title, label: "Name")
                 if let subtitle {
-                    Text(subtitle).font(.subheadline.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                    Text(subtitle).font(.subheadline.monospaced()).foregroundStyle(.secondary).copyable(subtitle)
                 }
                 HealthPill(health: health, text: statusText).padding(.top, 2)
             }
@@ -54,6 +54,8 @@ struct StatTile: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 12))
+        .copyable(value == "—" ? nil : [value, unit].compactMap { $0 }.joined(separator: " "), label: label.capitalized)
     }
 }
 
@@ -102,7 +104,7 @@ struct DetailRow: View {
                     .multilineTextAlignment(.trailing)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                    .textSelection(.enabled)
+                    .copyable(value, label: key)
             }
             .font(.callout)
             .padding(.vertical, 9)
@@ -149,7 +151,7 @@ struct PingResultCard: View {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(label).font(.caption).foregroundStyle(.secondary)
-                    Text(host).font(.callout.monospaced()).textSelection(.enabled)
+                    Text(host).font(.callout.monospaced()).copyable(host)
                 }
                 Spacer(minLength: 8)
                 if running {
@@ -181,7 +183,7 @@ struct PingResultCard: View {
             if expanded, let rawOutput {
                 Text(rawOutput)
                     .font(.caption2.monospaced())
-                    .textSelection(.enabled)
+                    .copyable(rawOutput, label: "Output")
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(10)
                     .background(Color.insetBackground, in: RoundedRectangle(cornerRadius: 8))

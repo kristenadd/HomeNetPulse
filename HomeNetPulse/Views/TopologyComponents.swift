@@ -58,6 +58,7 @@ struct TopologyNode<Content: View, Accessory: View>: View {
                     if let subtitle {
                         Text(subtitle).font(.subheadline.monospaced()).foregroundStyle(.secondary)
                             .lineLimit(1).truncationMode(.middle)
+                            .copyable(subtitle)
                     }
                 }
                 Spacer(minLength: 8)
@@ -127,7 +128,7 @@ struct MetricGrid: View {
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(item.tint ?? .primary)
                         .lineLimit(1).minimumScaleFactor(0.75)
-                        .textSelection(.enabled)
+                        .copyable(item.value, label: item.label)
                 }
             }
         }

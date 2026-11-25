@@ -36,7 +36,16 @@ struct GatewayDetailView: View {
                 DetailRow(key: "ISP gateway", value: b?.gatewayIPv4)
                 DetailRow(key: "Primary DNS", value: b?.primaryDNS)
                 DetailRow(key: "Secondary DNS", value: b?.secondaryDNS)
-                DetailRow(key: "Fiber (PON)", value: b?.ponStatus)
+                DetailRow(key: "Fiber (PON)", value: b?.ponFriendly,
+                          tint: b?.ponHealthy.map { $0 ? Color.green : Color.red })
+                if let explain = b?.ponExplanation {
+                    VStack(spacing: 0) {
+                        Text(explain).font(.caption).foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 8)
+                        Divider()
+                    }
+                }
                 DetailRow(key: "WAN MAC", value: b?.wanMAC)
                 DetailRow(key: "Receive errors", value: b?.receiveErrors,
                           tint: (Int(b?.receiveErrors ?? "0") ?? 0) > 0 ? .orange : nil)

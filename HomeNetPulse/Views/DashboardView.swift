@@ -127,6 +127,8 @@ struct DashboardView: View {
                 return .init(label: t, value: r?.shortSummary ?? "testing…", tint: r?.tint)
             })
         }
+        .copyMenu(title: "Internet", items: [.init(label: "WAN IP", value: model.broadband?.wanIPv4)]
+                  + settings.pingTargets.map { .init(label: $0, value: model.internetPings[$0]?.shortSummary) })
     }
 
     // MARK: Gateway
@@ -140,7 +142,8 @@ struct DashboardView: View {
                 MetricGrid(items: [
                     .init(label: "Line", value: b?.lineState, tint: b?.lineState?.lowercased().contains("up") == true ? .green : nil),
                     .init(label: "Speed", value: b?.speedMbps.map { Self.formatSpeed($0) }),
-                    .init(label: "Fiber (PON)", value: b?.ponStatus),
+                    .init(label: "Fiber (PON)", value: b?.ponFriendly,
+                          tint: b?.ponHealthy.map { $0 ? Color.green : Color.red }),
                     .init(label: "ISP Gateway", value: b?.gatewayIPv4),
                     .init(label: "ISP DNS", value: b?.primaryDNS),
                     .init(label: "Web UI", value: model.routerLatencyMs.map { String(format: "%.0f ms", $0) }),
@@ -161,6 +164,15 @@ struct DashboardView: View {
             }
         }
         .selectedOutline(inspected == .gateway)
+        .copyMenu(title: "Fiber Gateway", items: [
+            .init(label: "Gateway Address", value: settings.routerBaseURL?.host()),
+            .init(label: "WAN IP", value: b?.wanIPv4),
+            .init(label: "ISP Gateway", value: b?.gatewayIPv4),
+            .init(label: "Primary DNS", value: b?.primaryDNS),
+            .init(label: "Secondary DNS", value: b?.secondaryDNS),
+            .init(label: "WAN MAC", value: b?.wanMAC),
+            .init(label: "Fiber (PON)", value: b?.ponStatus),
+        ])
     }
 
     private func gatewayActions(compact: Bool) -> some View {
@@ -189,6 +201,18 @@ struct DashboardView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
+    static func copyItems(for s: BaseStation) -> [CopyItem] {
+        [
+            .init(label: "Name", value: s.name),
+            .init(label: "IP Address", value: s.ipAddress),
+            .init(label: "Ethernet MAC", value: s.ethernetMAC),
+            .init(label: "Wireless MAC", value: s.wirelessMAC),
+            .init(label: "Wi-Fi Network", value: s.networkName),
+            .init(label: "Firmware", value: s.firmware),
+            .init(label: "Model", value: s.modelName),
+        ]
+    }
+
     static func formatSpeed(_ mbps: String) -> String {
         guard let v = Double(mbps) else { return "\(mbps) Mbps" }
         return v >= 1000 ? String(format: "%g Gbps", v / 1000) : "\(mbps) Mbps"
@@ -198,13 +222,12 @@ struct DashboardView: View {
 
     @ViewBuilder private var routerNode: some View {
         if let r = model.mainRouter {
-            Button { open(.station(r.id)) } label: {
-                TopologyNode(title: r.name, subtitle: r.ipAddress ?? "resolving…", icon: "wifi.router.fill", health: r.health,
-                             content: { stationMetrics(r) }, accessory: { chevron })
-                    .contentShape(RoundedRectangle(cornerRadius: 16))
-            }
-            .buttonStyle(.plain)
-            .selectedOutline(inspected == .station(r.id))
+            TopologyNode(title: r.name, subtitle: r.ipAddress ?? "resolving…", icon: "wifi.router.fill", health: r.health,
+                         content: { stationMetrics(r) }, accessory: { chevron })
+                .contentShape(RoundedRectangle(cornerRadius: 16))
+                .tappableCard { open(.station(r.id)) }
+                .copyMenu(title: r.name, items: Self.copyItems(for: r))
+                .selectedOutline(inspected == .station(r.id))
         } else {
             TopologyNode(title: "Router", subtitle: model.discoveryError ?? "Searching for AirPort base stations…",
                          icon: "wifi.router", health: .unknown) { EmptyView() }
@@ -218,7 +241,7 @@ struct DashboardView: View {
                      icon: "point.3.connected.trianglepath.dotted", health: model.extendersHealth) {
             VStack(spacing: 8) {
                 ForEach(model.extenders) { s in
-                    Button { open(.station(s.id)) } label: {
+                    Group {
                         HStack(spacing: 12) {
                             NodeIcon(systemName: "wifi.router", health: s.health, size: 32)
                             VStack(alignment: .leading, spacing: 2) {
@@ -233,9 +256,10 @@ struct DashboardView: View {
                         }
                         .padding(10)
                         .background(Color.insetBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .contentShape(Rectangle())
+                        .contentShape(RoundedRectangle(cornerRadius: 10))
                     }
-                    .buttonStyle(.plain)
+                    .tappableCard { open(.station(s.id)) }
+                    .copyMenu(title: s.name, items: Self.copyItems(for: s))
                     .selectedOutline(inspected == .station(s.id), cornerRadius: 10)
                 }
             }

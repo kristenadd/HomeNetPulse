@@ -22,6 +22,7 @@
 		C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = F102479F50B7247FB22764AA /* HTML.swift */; };
 		C87486E276CD084CE8D7064F /* AirPortBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052681950A63201C88ADCCE8 /* AirPortBrowser.swift */; };
 		EE090D3DFBA68BEC1BFE30C4 /* RouterClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67845DEF76D4E358F881D2DD /* RouterClient.swift */; };
+		F1098C6A3A61639ECFB2A54C /* Copyable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597FB1E91702595566112483 /* Copyable.swift */; };
 		F3201B7AE31F9EB8519F3936 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */; };
 		F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830FC37B927B98E42F95DCFB /* Keychain.swift */; };
 		FA4BF0A757947652747E5C96 /* BaseStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8EF5CD90A38C92CD2DEE3F /* BaseStation.swift */; };
@@ -45,6 +46,7 @@
 		2D64382380E1319474F1AB3A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		37CE35D4B343C37336D5417A /* DetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailComponents.swift; sourceTree = "<group>"; };
 		4BC525BFC3112189279810E6 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		597FB1E91702595566112483 /* Copyable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Copyable.swift; sourceTree = "<group>"; };
 		5F8EF5CD90A38C92CD2DEE3F /* BaseStation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseStation.swift; sourceTree = "<group>"; };
 		67845DEF76D4E358F881D2DD /* RouterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterClient.swift; sourceTree = "<group>"; };
 		830FC37B927B98E42F95DCFB /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 			isa = PBXGroup;
 			children = (
 				97EAC894F8A3C2E35BBDDBD5 /* Components.swift */,
+				597FB1E91702595566112483 /* Copyable.swift */,
 				C241A99A62E03940B089301F /* DashboardView.swift */,
 				37CE35D4B343C37336D5417A /* DetailComponents.swift */,
 				D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */,
@@ -253,6 +256,7 @@
 				9537348C09EEA2D41A35348F /* AppSettings.swift in Sources */,
 				FA4BF0A757947652747E5C96 /* BaseStation.swift in Sources */,
 				9A3B3C0B0E5E3DBDF19559D5 /* Components.swift in Sources */,
+				F1098C6A3A61639ECFB2A54C /* Copyable.swift in Sources */,
 				089D876262091DF43EA6669B /* DashboardModel.swift in Sources */,
 				46431D160D9DC12761601C42 /* DashboardView.swift in Sources */,
 				A2773AE3E58D61ED9816302B /* DefaultGateway.swift in Sources */,

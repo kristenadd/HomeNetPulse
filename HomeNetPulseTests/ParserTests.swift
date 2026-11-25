@@ -32,6 +32,15 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(HTML.nonce(in: broadbandHTML), "abc123")
     }
 
+    func testPONState() {
+        var s = BroadbandSummary(sections: [StatSection(title: "GPON Status", rows: [StatRow(key: "PON Link Status", value: "OPERATION (O5)")])])
+        XCTAssertEqual(s.ponFriendly, "Connected (O5)")
+        XCTAssertEqual(s.ponHealthy, true)
+        s.ponStatus = "INTERMITTENT LODS (O6)"
+        XCTAssertEqual(s.ponFriendly, "Signal lost (O6)")
+        XCTAssertEqual(s.ponHealthy, false)
+    }
+
     func testDiagPing() {
         let out = """
         PING 1.1.1.1 (1.1.1.1): 56 data bytes

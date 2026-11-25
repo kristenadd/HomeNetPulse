@@ -148,6 +148,41 @@ struct BroadbandSummary: Sendable, Equatable {
     }
 }
 
+extension BroadbandSummary {
+    /// GPON ONU activation state (ITU-T G.984.3), e.g. "O5".
+    var ponStateCode: String? { ponStatus.flatMap { HTML.firstMatch(#"\((O[1-7])\)"#, in: $0) } }
+
+    var ponFriendly: String? {
+        guard let code = ponStateCode else { return ponStatus }
+        let name: String = switch code {
+        case "O1": "Initializing"
+        case "O2": "Standby"
+        case "O3": "Identifying"
+        case "O4": "Ranging"
+        case "O5": "Connected"
+        case "O6": "Signal lost"
+        case "O7": "Disabled by ISP"
+        default: "Unknown"
+        }
+        return "\(name) (\(code))"
+    }
+
+    var ponExplanation: String? {
+        switch ponStateCode {
+        case "O1": "The fiber terminal just powered on and is starting up."
+        case "O2": "The terminal hears the ISP's equipment and is waiting to register."
+        case "O3": "The terminal is sending its serial number to the ISP."
+        case "O4": "The ISP is measuring the fiber distance and timing."
+        case "O5": "Fully registered with the ISP and carrying traffic. This is the healthy state."
+        case "O6": "Intermittent loss of downstream signal. Check the fiber cable and connectors."
+        case "O7": "The ISP has stopped this terminal. Contact the ISP."
+        default: nil
+        }
+    }
+
+    var ponHealthy: Bool? { ponStateCode.map { $0 == "O5" } }
+}
+
 extension String {
     var nilIfEmpty: String? { isEmpty ? nil : self }
 }
