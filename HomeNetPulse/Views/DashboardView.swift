@@ -189,6 +189,7 @@ struct DashboardView: View {
             .disabled(model.devicePings.contains(where: \.running) || model.routerReachable != true)
             RebootButton(compact: true)
             Spacer(minLength: 0)
+            ManageGatewayButton(compact: compact)
             Button { open(.gateway) } label: {
                 if compact {
                     Image(systemName: usesInspector ? "sidebar.trailing" : "chevron.right")

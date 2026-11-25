@@ -145,6 +145,27 @@ extension PingResult {
     var tint: Color? { health == .good ? nil : health.color }
 }
 
+/// Opens the gateway's own web interface in the default browser.
+struct ManageGatewayButton: View {
+    @Environment(AppSettings.self) private var settings
+    @Environment(\.openURL) private var openURL
+    var compact = false
+
+    var body: some View {
+        Button {
+            if let url = settings.routerBaseURL { openURL(url) }
+        } label: {
+            if compact {
+                Image(systemName: "safari").accessibilityLabel("Manage")
+            } else {
+                Label("Manage", systemImage: "safari")
+            }
+        }
+        .disabled(settings.routerBaseURL == nil)
+        .help("Open \(settings.routerBaseURL?.absoluteString ?? "the gateway") in your browser")
+    }
+}
+
 extension View {
     /// Accent outline marking the card whose details are open in the inspector.
     func selectedOutline(_ selected: Bool, cornerRadius: CGFloat = 16) -> some View {

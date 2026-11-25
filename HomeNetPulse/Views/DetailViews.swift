@@ -14,6 +14,13 @@ struct GatewayDetailView: View {
                          statusText: model.routerReachable == false ? "Unreachable" : nil,
                          onClose: onClose)
 
+            HStack(spacing: 10) {
+                ManageGatewayButton()
+                    .buttonStyle(.borderedProminent)
+                Text("Open the gateway's web interface in your browser")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
             StatTileGrid {
                 StatTile(label: "Line", value: b?.lineState ?? "—",
                          tint: b?.lineState?.lowercased().contains("up") == true ? .green : nil)

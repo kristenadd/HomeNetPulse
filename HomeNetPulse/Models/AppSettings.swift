@@ -17,6 +17,9 @@ final class AppSettings {
     /// User override for which base station is the main (NAT) router; nil = auto-detect.
     var mainRouterMAC: String? { didSet { save() } }
 
+    var showMenuBarIcon: Bool { didSet { save() } }
+    var showLatencyInMenuBar: Bool { didSet { save() } }
+
     var routerURL: String
     var routerPassword: String
 
@@ -29,6 +32,8 @@ final class AppSettings {
         trustedBaseStationMACs = Set(defaults.stringArray(forKey: "trustedMACs") ?? [])
         trustedRouterMAC = defaults.string(forKey: "trustedRouterMAC")
         mainRouterMAC = defaults.string(forKey: "mainRouterMAC")
+        showMenuBarIcon = defaults.object(forKey: "showMenuBarIcon") as? Bool ?? true
+        showLatencyInMenuBar = defaults.object(forKey: "showLatencyInMenuBar") as? Bool ?? true
         let creds = RouterCredentialStore.load()
         routerURL = creds?.url ?? Self.defaultRouterURL
         routerPassword = creds?.password ?? ""
@@ -40,6 +45,8 @@ final class AppSettings {
         defaults.set(Array(trustedBaseStationMACs).sorted(), forKey: "trustedMACs")
         defaults.set(trustedRouterMAC, forKey: "trustedRouterMAC")
         defaults.set(mainRouterMAC, forKey: "mainRouterMAC")
+        defaults.set(showMenuBarIcon, forKey: "showMenuBarIcon")
+        defaults.set(showLatencyInMenuBar, forKey: "showLatencyInMenuBar")
     }
 
     @discardableResult

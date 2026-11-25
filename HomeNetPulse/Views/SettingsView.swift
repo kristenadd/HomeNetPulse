@@ -66,6 +66,18 @@ struct SettingsView: View {
                 Button("Reset to 1.1.1.1 and 8.8.8.8") { settings.pingTargets = AppSettings.defaultTargets }
             }
 
+            #if os(macOS)
+            Section {
+                Toggle("Show status in menu bar", isOn: $settings.showMenuBarIcon)
+                Toggle("Show internet latency next to the icon", isOn: $settings.showLatencyInMenuBar)
+                    .disabled(!settings.showMenuBarIcon)
+            } header: {
+                Text("Menu Bar")
+            } footer: {
+                Text("The icon stays monochrome while everything is healthy and turns orange or red when something needs attention. Monitoring keeps running while the main window is closed.")
+            }
+            #endif
+
             Section("Refresh") {
                 Picker("Auto-refresh every", selection: $settings.refreshInterval) {
                     Text("30 seconds").tag(30.0)

@@ -46,9 +46,10 @@ final class DashboardModel {
         browser.onError = { [weak self] msg in self?.discoveryError = msg }
     }
 
+    /// Idempotent: the window and the menu bar extra both call this.
     func start() {
+        guard autoRefreshTask == nil else { return }
         browser.start()
-        autoRefreshTask?.cancel()
         autoRefreshTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(2))   // let Bonjour populate
             while !Task.isCancelled {
@@ -61,6 +62,7 @@ final class DashboardModel {
 
     func stop() {
         autoRefreshTask?.cancel()
+        autoRefreshTask = nil
         browser.stop()
     }
 
@@ -98,6 +100,32 @@ final class DashboardModel {
 
     var extendersHealth: Health {
         extenders.isEmpty ? .unknown : extenders.map(\.health).max() ?? .unknown
+    }
+
+    /// Worst health across the chain, for the menu bar icon.
+    var overallHealth: Health {
+        var parts: [Health] = [internetHealth, gatewayHealth]
+        if let r = mainRouter { parts.append(r.health) }
+        parts += extenders.map(\.health)
+        let known = parts.filter { $0 != .unknown }
+        return known.max() ?? .unknown
+    }
+
+    /// One-line explanation of the worst problem, for the menu bar tooltip/header.
+    var overallSummary: String {
+        if internetHealth == .down { return "Internet is unreachable" }
+        if gatewayHealth == .down { return "Fiber gateway is not responding" }
+        if let r = mainRouter, r.health == .down { return "\(r.name) is not responding" }
+        if let e = extenders.first(where: { $0.health == .down }) { return "\(e.name) is not responding" }
+        if overallHealth == .degraded { return "Some links are degraded" }
+        if overallHealth == .good { return "Everything looks healthy" }
+        return "Checking your network…"
+    }
+
+    /// Average latency across internet targets, shown next to the menu bar icon.
+    var internetLatencyMs: Double? {
+        let avgs = settings.pingTargets.compactMap { internetPings[$0]?.avgMs }
+        return avgs.isEmpty ? nil : avgs.reduce(0, +) / Double(avgs.count)
     }
 
     func setMainRouter(_ station: BaseStation?) {
