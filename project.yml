@@ -1,0 +1,61 @@
+name: HomeNetPulse
+options:
+  bundleIdPrefix: com.kristenadd
+  deploymentTarget:
+    iOS: "18.0"
+    macOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    DEVELOPMENT_TEAM: B4H429V95D
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  HomeNetPulse:
+    type: application
+    supportedDestinations: [iOS, macOS]
+    sources: [HomeNetPulse]
+    entitlements:
+      path: HomeNetPulse/HomeNetPulse.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.network.server: true
+    info:
+      path: HomeNetPulse/Info.plist
+      properties:
+        CFBundleDisplayName: HomeNet Pulse
+        LSApplicationCategoryType: public.app-category.utilities
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        NSLocalNetworkUsageDescription: HomeNet Pulse discovers your AirPort base stations and checks the health of your router on the local network.
+        NSBonjourServices: [_airport._tcp]
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kristenadd.HomeNetPulse
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME[sdk=macosx*]: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+  HomeNetPulseTests:
+    type: bundle.unit-test
+    supportedDestinations: [iOS, macOS]
+    sources: [HomeNetPulseTests]
+    dependencies:
+      - target: HomeNetPulse
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: $(TEST_HOST)
+        TEST_HOST[sdk=macosx*]: $(BUILT_PRODUCTS_DIR)/HomeNetPulse.app/Contents/MacOS/HomeNetPulse
+        TEST_HOST[sdk=iphone*]: $(BUILT_PRODUCTS_DIR)/HomeNetPulse.app/HomeNetPulse
+schemes:
+  HomeNetPulse:
+    build:
+      targets:
+        HomeNetPulse: all
+    test:
+      targets: [HomeNetPulseTests]

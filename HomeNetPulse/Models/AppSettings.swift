@@ -1,0 +1,55 @@
+import Foundation
+import Observation
+
+/// Non-secret preferences, persisted in UserDefaults.
+@MainActor @Observable
+final class AppSettings {
+    static let defaultTargets = ["1.1.1.1", "8.8.8.8"]
+    static let defaultRouterURL = "http://192.168.0.254/"
+
+    var pingTargets: [String] { didSet { save() } }
+    var refreshInterval: Double { didSet { save() } }
+    /// Ethernet MACs (waMA) of base stations that belong to "my" network.
+    var trustedBaseStationMACs: Set<String> { didSet { save() } }
+    /// WAN MAC of the fiber gateway, captured when the network was trusted.
+    var trustedRouterMAC: String? { didSet { save() } }
+
+    var routerURL: String
+    var routerPassword: String
+
+    private let defaults = UserDefaults.standard
+
+    init() {
+        pingTargets = defaults.stringArray(forKey: "pingTargets") ?? Self.defaultTargets
+        let interval = defaults.double(forKey: "refreshInterval")
+        refreshInterval = interval == 0 ? 60 : interval
+        trustedBaseStationMACs = Set(defaults.stringArray(forKey: "trustedMACs") ?? [])
+        trustedRouterMAC = defaults.string(forKey: "trustedRouterMAC")
+        let creds = RouterCredentialStore.load()
+        routerURL = creds?.url ?? Self.defaultRouterURL
+        routerPassword = creds?.password ?? ""
+    }
+
+    private func save() {
+        defaults.set(pingTargets, forKey: "pingTargets")
+        defaults.set(refreshInterval, forKey: "refreshInterval")
+        defaults.set(Array(trustedBaseStationMACs).sorted(), forKey: "trustedMACs")
+        defaults.set(trustedRouterMAC, forKey: "trustedRouterMAC")
+    }
+
+    @discardableResult
+    func saveRouterCredentials(url: String, password: String) -> Bool {
+        var trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.lowercased().hasPrefix("http") { trimmed = "http://" + trimmed }
+        routerURL = trimmed
+        routerPassword = password
+        return RouterCredentialStore.save(.init(url: trimmed, password: password)) == errSecSuccess
+    }
+
+    var routerBaseURL: URL? {
+        guard var comps = URLComponents(string: routerURL) else { return nil }
+        comps.path = "/"
+        comps.query = nil
+        return comps.url
+    }
+}
