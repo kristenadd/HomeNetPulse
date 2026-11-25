@@ -58,7 +58,7 @@ struct HomeNetPulseApp: App {
     var body: some Scene {
         #if os(macOS)
         // Single main window so "Open HomeNet Pulse" in the menu bar reuses it.
-        Window("HomeNet Pulse", id: "main") {
+        Window(AppInfo.displayName, id: "main") {
             DashboardView()
                 .environment(model)
                 .environment(settings)

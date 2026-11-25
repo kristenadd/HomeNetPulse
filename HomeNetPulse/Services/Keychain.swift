@@ -3,7 +3,8 @@ import Security
 
 /// Stores the router URL and device access code in the Keychain.
 enum RouterCredentialStore {
-    private static let service = "com.kristenadd.HomeNetPulse.router"
+    // Per app: the release keeps "com.kristenadd.HomeNetPulse.router"; Debug builds get their own item.
+    private static var service: String { AppInfo.bundleID + ".router" }
     private static let account = "router"
 
     struct Credentials: Codable, Equatable, Sendable {

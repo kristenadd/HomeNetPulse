@@ -76,7 +76,7 @@ struct MenuBarStatusView: View {
             NodeIcon(systemName: model.overallHealth == .down ? "wifi.exclamationmark" : "wifi.router",
                      health: model.overallHealth, size: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text("HomeNet Pulse").font(.headline)
+                Text(AppInfo.displayName).font(.headline)
                 Text(model.overallSummary).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
@@ -170,7 +170,7 @@ struct MenuBarStatusView: View {
                 .disabled(model.isRefreshing)
             }
             HStack {
-                Button("Open HomeNet Pulse") { openMainWindow() }
+                Button("Open \(AppInfo.displayName)") { openMainWindow() }
                 .buttonStyle(.borderedProminent)
                 Button("Settings…") {
                     let popup = NSApp.keyWindow

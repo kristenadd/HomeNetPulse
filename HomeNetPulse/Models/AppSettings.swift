@@ -2,6 +2,15 @@ import Foundation
 import Observation
 import Security
 
+/// The app's own name and bundle ID: "HomeNet Pulse (Debug)" / ….debug for local Debug builds.
+enum AppInfo {
+    static var displayName: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "HomeNet Pulse"
+    }
+    static var bundleID: String { Bundle.main.bundleIdentifier ?? "com.kristenadd.HomeNetPulse" }
+    static var isDebugBuild: Bool { bundleID.hasSuffix(".debug") }
+}
+
 /// Non-secret preferences, persisted in UserDefaults.
 @MainActor @Observable
 final class AppSettings {

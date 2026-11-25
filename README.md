@@ -30,18 +30,28 @@ xcodebuild -scheme HomeNetPulse -destination 'platform=macOS' test
 ## Installing on your Mac
 
 ```bash
-./scripts/install-mac.sh
+./scripts/install-mac.sh          # latest release
+./scripts/install-mac.sh 1.0.2    # a specific version
 ```
 
-This builds a Release copy, installs it as `/Applications/HomeNet Pulse.app` and launches it. The app runs from the menu bar. Run the script again after pulling changes to update it.
+This downloads the notarized DMG from the GitHub release, checks that Gatekeeper accepts it, installs it as `/Applications/HomeNet Pulse.app` and launches it. The app runs from the menu bar. Only notarized releases go into `/Applications`.
 
-## Installing on iPhone and iPad
+## Testing local changes
+
+Debug builds are a separate app, **HomeNet Pulse (Debug)** (`com.kristenadd.HomeNetPulse.debug`), with their own settings, Keychain item and permissions, so testing never touches the installed release.
+
+```bash
+./scripts/run-debug-mac.sh   # build and run from the build folder (never copied to /Applications)
+./scripts/install-ios.sh     # install the Debug app on paired iPhones/iPads (add --launch to open it)
+```
+
+## Installing the Debug app on iPhone and iPad
 
 ```bash
 ./scripts/install-ios.sh
 ```
 
-Builds a Release copy and installs it on every paired iPhone and iPad that's available, or only on the device IDs you pass. Add `--launch` to also open it on each device.
+Installs **HomeNet Pulse (Debug)** on every paired iPhone and iPad that's available, or only on the device IDs you pass. Add `--launch` to also open it on each device. The release app comes from Firebase App Distribution.
 
 ## Releasing
 

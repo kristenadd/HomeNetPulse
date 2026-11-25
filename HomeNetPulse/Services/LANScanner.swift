@@ -211,7 +211,7 @@ enum LANScanner {
         #if os(macOS)
         let fm = FileManager.default
         let id = UUID().uuidString
-        let label = "com.kristenadd.HomeNetPulse.arp.\(id)"
+        let label = "\(AppInfo.bundleID).arp.\(id)"
         let dir = fm.temporaryDirectory
         let outURL = dir.appendingPathComponent("hnp-arp-\(id).txt")
         let plistURL = dir.appendingPathComponent("hnp-arp-\(id).plist")

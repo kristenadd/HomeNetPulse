@@ -96,7 +96,7 @@ struct DashboardView: View {
                 .frame(maxWidth: .infinity)
             }
             .background(Color.platformGroupedBackground)
-            .navigationTitle("HomeNet Pulse")
+            .navigationTitle(AppInfo.displayName)
             #if os(iOS)
             // A collapsing large title flips back and forth near the top while the live data
             // re-renders, jolting the content up and down. Keep the compact title.

@@ -35,6 +35,7 @@ on:
       - "**.md"
       - ".gitignore"
       - "scripts/install-*.sh"
+      - "scripts/run-debug-mac.sh"
       - "scripts/update-manuf.sh"
       - "scripts/convert-manuf.py"
       - "scripts/make-icon.swift"

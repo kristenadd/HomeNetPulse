@@ -173,7 +173,7 @@ struct SettingsView: View {
                     Text(Self.versionString).monospacedDigit().copyable(Self.versionString, label: "Version")
                 }
             } footer: {
-                Text("HomeNet Pulse").frame(maxWidth: .infinity)
+                Text("\(AppInfo.displayName) · \(AppInfo.bundleID)").frame(maxWidth: .infinity)
             }
         }
         .formStyle(.grouped)
