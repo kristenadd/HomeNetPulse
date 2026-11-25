@@ -12,6 +12,7 @@ struct GatewayDetailView: View {
                          subtitle: settings.routerBaseURL?.host() ?? settings.routerURL,
                          health: model.gatewayHealth,
                          statusText: model.routerReachable == false ? "Unreachable" : nil,
+                         summary: { NetworkReport.gateway(model) },
                          onClose: onClose)
 
             HStack(spacing: 10) {
@@ -38,12 +39,6 @@ struct GatewayDetailView: View {
                     .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
             }
 
-            SpeedTestSection()
-
-            if let f = model.fiber {
-                FiberOpticsCard(fiber: f)
-            }
-
             DetailCard(title: "Broadband", systemImage: "network") {
                 DetailRow(key: "WAN IPv4", value: b?.wanIPv4)
                 DetailRow(key: "ISP gateway", value: b?.gatewayIPv4)
@@ -63,7 +58,18 @@ struct GatewayDetailView: View {
                 DetailRow(key: "Receive errors", value: b?.receiveErrors,
                           tint: (Int(b?.receiveErrors ?? "0") ?? 0) > 0 ? .orange : nil)
                 DetailRow(key: "Receive drops", value: b?.receiveDrops, last: true)
+            } accessory: {
+                Spacer()
+                RebootButton(prominent: true)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
             }
+            if settings.routerPassword.isEmpty || model.rebootStatus != nil {
+                Text(model.rebootStatus ?? "Add the Device Access Code in Settings to enable reboot.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
+            SpeedTestSection()
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -94,24 +100,8 @@ struct GatewayDetailView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Recovery", systemImage: "cross.case").font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                VStack(alignment: .leading, spacing: 10) {
-                    if model.internetDown {
-                        Label("Internet is unreachable from this device.", systemImage: "wifi.exclamationmark")
-                            .foregroundStyle(.red).font(.callout.weight(.medium))
-                    }
-                    RebootButton()
-                        .buttonStyle(.bordered)
-                        .controlSize(.large)
-                    if settings.routerPassword.isEmpty {
-                        Text("Add the Device Access Code in Settings to enable reboot.").font(.caption).foregroundStyle(.secondary)
-                    }
-                    if let s = model.rebootStatus { Text(s).font(.caption) }
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            if let f = model.fiber {
+                FiberOpticsCard(fiber: f)
             }
 
             if let b, !b.sections.isEmpty {
@@ -141,7 +131,8 @@ struct BaseStationDetail: View {
     var body: some View {
         DetailPage(title: station.name) {
             DetailHeader(icon: isMain ? "wifi.router.fill" : "wifi.router", title: station.name,
-                         subtitle: station.ipAddress ?? "resolving…", health: station.health, onClose: onClose)
+                         subtitle: station.ipAddress ?? "resolving…", health: station.health,
+                         summary: { NetworkReport.station(station, model) }, onClose: onClose)
 
             HStack(spacing: 10) {
                 ManageAirPortButton(prominent: true)
@@ -206,6 +197,16 @@ struct BaseStationDetail: View {
                     }
                 }
                 .padding(.vertical, 10)
+                if !isMain, let main = model.mainRouter, let backhaul = station.backhaul(to: main) {
+                    Divider()
+                    DetailRow(key: "Backhaul", value: backhaul.label, mono: false,
+                              tint: backhaul == .ethernet ? nil : .orange, last: true)
+                    Text(backhaul.explanation)
+                        .font(.caption).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.bottom, 10)
+                }
             }
 
             DetailCard(title: "Wireless", systemImage: "wifi") {
@@ -243,7 +244,8 @@ struct InternetDetailView: View {
         DetailPage(title: "Internet") {
             DetailHeader(icon: "globe", title: "Internet",
                          subtitle: model.broadband?.wanIPv4.map { "WAN \($0)" },
-                         health: model.internetHealth, onClose: onClose)
+                         health: model.internetHealth,
+                         summary: { NetworkReport.internet(model) }, onClose: onClose)
 
             StatTileGrid {
                 StatTile(label: "Avg latency", value: model.internetLatencyMs.map { String(format: "%.1f", $0) } ?? "—", unit: "ms")
@@ -402,6 +404,7 @@ struct DevicesDetailView: View {
                          subtitle: model.lanInterface.map { "\($0.cidr) · \($0.name)" },
                          health: model.lanDevices.isEmpty ? .unknown : .good,
                          statusText: model.lanScanning ? "Scanning…" : "\(model.lanDevices.count) found",
+                         summary: { NetworkReport.devices(model) },
                          onClose: onClose)
 
             HStack(spacing: 10) {
@@ -667,6 +670,10 @@ struct FiberOpticsCard: View {
                 DetailRow(key: "Wavelength", value: fiber.wavelength)
                 DetailRow(key: "Module", value: fiber.module, mono: false)
                 DetailRow(key: "Serial", value: fiber.value("Vendor SN"), last: true)
+            } accessory: {
+                if let up = fiber.moduleUp {
+                    HealthPill(health: up ? .good : .down, text: up ? "Up" : "Down")
+                }
             }
             Text("Readings and limits come from the fiber module itself. Receive power is the most useful: a drop toward the low limit usually means a dirty or bent fiber.")
                 .font(.caption).foregroundStyle(.secondary)

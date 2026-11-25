@@ -47,6 +47,38 @@ struct BaseStation: Identifiable, Sendable, Equatable {
         return .unknown
     }
 
+    /// How an extender reaches the main router, inferred from the radio channels in Bonjour.
+    /// A wireless extender joins the main router's network on one radio, so that radio must share
+    /// the router's channel. No shared channel on either band means the link must be Ethernet.
+    enum Backhaul: Equatable, Sendable {
+        case ethernet
+        case possiblyWireless(band: String)
+
+        var label: String {
+            switch self {
+            case .ethernet: "Ethernet"
+            case .possiblyWireless: "Possibly wireless"
+            }
+        }
+
+        var explanation: String {
+            switch self {
+            case .ethernet:
+                "Neither radio shares a channel with the main router, so it can't be extending wirelessly."
+            case .possiblyWireless(let band):
+                "Its \(band) radio is on the main router's channel. That's needed to extend wirelessly, but a wired station can match by chance."
+            }
+        }
+    }
+
+    func backhaul(to main: BaseStation) -> Backhaul? {
+        guard main.id != id else { return nil }
+        let pairs = [("5 GHz", channel5, main.channel5), ("2.4 GHz", channel24, main.channel24)]
+        guard pairs.contains(where: { $0.1 != nil && $0.2 != nil }) else { return nil }
+        if let match = pairs.first(where: { $0.1 != nil && $0.1 == $0.2 }) { return .possiblyWireless(band: match.0) }
+        return .ethernet
+    }
+
     static func normalizeMAC(_ raw: String) -> String {
         raw.replacingOccurrences(of: "-", with: ":").lowercased()
     }

@@ -68,3 +68,30 @@ extension View {
             .accessibilityAction(named: "Show Details", action)
     }
 }
+
+/// Copies a plain-text report (for pasting into an AI chat or a support ticket) and briefly says "Copied".
+struct CopyReportButton: View {
+    var title: String
+    var iconOnly = false
+    var report: @MainActor () -> String
+    @State private var copied = false
+
+    var body: some View {
+        Button {
+            Clipboard.copy(report())
+            copied = true
+            Task { try? await Task.sleep(for: .seconds(1.5)); copied = false }
+        } label: {
+            Label(copied ? "Copied" : title, systemImage: copied ? "checkmark" : "doc.on.clipboard")
+                .labelStyle(iconOnly ? AnyLabelStyle(.iconOnly) : AnyLabelStyle(.titleAndIcon))
+        }
+        .help("Copy a text summary to paste into an AI assistant or a support request")
+    }
+}
+
+/// Lets one button switch label styles.
+struct AnyLabelStyle: LabelStyle {
+    private let make: (Configuration) -> AnyView
+    init<S: LabelStyle>(_ style: S) { make = { AnyView(style.makeBody(configuration: $0)) } }
+    func makeBody(configuration: Configuration) -> some View { make(configuration) }
+}

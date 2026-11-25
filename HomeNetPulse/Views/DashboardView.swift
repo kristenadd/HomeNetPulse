@@ -178,6 +178,9 @@ struct DashboardView: View {
                     .disabled(model.isRefreshing)
                 }
                 ToolbarItem(placement: .primaryAction) {
+                    CopyReportButton(title: "Copy Details", iconOnly: true) { NetworkReport.network(model) }
+                }
+                ToolbarItem(placement: .primaryAction) {
                     Button { showSettings = true } label: { Label("Settings", systemImage: "gearshape") }
                 }
             }
@@ -364,7 +367,9 @@ struct DashboardView: View {
                                 Text(s.name).font(.subheadline.weight(.semibold)).lineLimit(1)
                                 Text([s.ipAddress ?? "resolving…", s.ping?.shortSummary].compactMap { $0 }.joined(separator: " · "))
                                     .font(.caption.monospacedDigit()).foregroundStyle(s.ping?.tint ?? .secondary).lineLimit(1)
-                                Text(s.modelName).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                                Text([s.modelName, model.mainRouter.flatMap { s.backhaul(to: $0) }.map { "\($0.label) backhaul" }]
+                                    .compactMap { $0 }.joined(separator: " · "))
+                                    .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                                 if model.isConnected(s), let wifi = model.wifi {
                                     ConnectedBadge(wifi: wifi, compact: !usesInspector).padding(.top, 2)
                                 }
@@ -490,14 +495,16 @@ struct RebootButton: View {
     @Environment(DashboardModel.self) private var model
     @Environment(AppSettings.self) private var settings
     var compact = false
+    var prominent = false
     @State private var confirm = false
 
     var body: some View {
-        Button(role: .destructive) { confirm = true } label: {
+        Button(role: prominent ? nil : .destructive) { confirm = true } label: {
             if model.rebooting { HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Rebooting…") } }
             else { Label(compact ? "Reboot" : "Reboot Fiber Gateway", systemImage: "restart.circle") }
         }
-        .tint(model.internetDown ? .red : nil)
+        // The destructive role would make a prominent button red; keep it the accent color unless the internet is down.
+        .tint(model.internetDown ? .red : (prominent ? .accentColor : nil))
         .disabled(model.rebooting || settings.routerPassword.isEmpty)
         .help(settings.routerPassword.isEmpty ? "Add the Device Access Code in Settings to enable reboot." : "Restart the gateway")
         .confirmationDialog("Reboot the fiber gateway?", isPresented: $confirm, titleVisibility: .visible) {

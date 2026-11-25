@@ -10,6 +10,8 @@ struct DetailHeader: View {
     var subtitle: String?
     var health: Health
     var statusText: String?
+    /// Text for the "Copy Summary" button; no button when nil.
+    var summary: (@MainActor () -> String)? = nil
     var onClose: (() -> Void)?
 
     var body: some View {
@@ -20,7 +22,15 @@ struct DetailHeader: View {
                 if let subtitle {
                     Text(subtitle).font(.subheadline.monospaced()).foregroundStyle(.secondary).copyable(subtitle)
                 }
-                HealthPill(health: health, text: statusText).padding(.top, 2)
+                HStack(spacing: 8) {
+                    HealthPill(health: health, text: statusText)
+                    if let summary {
+                        CopyReportButton(title: "Copy Summary", report: summary)
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                    }
+                }
+                .padding(.top, 2)
             }
             Spacer(minLength: 0)
             if let onClose {
@@ -70,21 +80,32 @@ struct StatTileGrid<Content: View>: View {
 }
 
 /// A titled, rounded group of rows.
-struct DetailCard<Content: View>: View {
+struct DetailCard<Content: View, Accessory: View>: View {
     var title: String
     var systemImage: String
     @ViewBuilder var content: Content
+    /// Shown after the title, like a status pill or a button pushed to the right.
+    @ViewBuilder var accessory: Accessory
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(title, systemImage: systemImage)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+            HStack {
+                Label(title, systemImage: systemImage)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                accessory
+            }
             VStack(alignment: .leading, spacing: 0) { content }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 4)
                 .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
+    }
+}
+
+extension DetailCard where Accessory == EmptyView {
+    init(title: String, systemImage: String, @ViewBuilder content: () -> Content) {
+        self.init(title: title, systemImage: systemImage, content: content, accessory: { EmptyView() })
     }
 }
 

@@ -80,6 +80,13 @@ struct FiberStatus: Sendable, Equatable {
         [value("Vendor Name"), value("Vendor PN")].compactMap { $0 }.joined(separator: " ").nilIfEmpty
     }
 
+    /// The module's link: "Up" when the link and optical WAN report up, "Down" if either is down.
+    var moduleUp: Bool? {
+        if linkUp == false || operationalUp == false { return false }
+        if linkUp == nil && operationalUp == nil { return nil }
+        return true
+    }
+
     var status: OpticalMetric.Status {
         if linkUp == false || operationalUp == false { return .alarm }
         return metrics.map(\.status).max() ?? .ok

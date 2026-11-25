@@ -11,6 +11,7 @@
 		27CD2C0CC642EA57642D9D6E /* WiFiStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBFCEC33E34F57F8981AB4EF /* WiFiStatus.swift */; };
 		2CB12BEE41286A9701DE1CD8 /* LaunchAtLoginToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */; };
 		2EDE804A61ED078215706B18 /* DetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37CE35D4B343C37336D5417A /* DetailComponents.swift */; };
+		39F863F456E2F59D190ADE82 /* NetworkReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0BFFB1B24E0B86828718C7D /* NetworkReport.swift */; };
 		41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */; };
 		46431D160D9DC12761601C42 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241A99A62E03940B089301F /* DashboardView.swift */; };
 		48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DCAC4241147EAFC2417ED3 /* Pinger.swift */; };
@@ -76,6 +77,7 @@
 		9D674105107F5F173D5257FF /* ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParserTests.swift; sourceTree = "<group>"; };
 		A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A6F9B4A55AC4A3193ED34876 /* DNSCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNSCheck.swift; sourceTree = "<group>"; };
+		B0BFFB1B24E0B86828718C7D /* NetworkReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReport.swift; sourceTree = "<group>"; };
 		B9F923C74ED423387000E326 /* DefaultGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultGateway.swift; sourceTree = "<group>"; };
 		BFE7E87F79B8FB5F3E8FDA9B /* UnicastMDNS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnicastMDNS.swift; sourceTree = "<group>"; };
 		C241A99A62E03940B089301F /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
@@ -163,6 +165,7 @@
 				4BC525BFC3112189279810E6 /* AppSettings.swift */,
 				5F8EF5CD90A38C92CD2DEE3F /* BaseStation.swift */,
 				1115846DC2AD50CFB7B28DCB /* DashboardModel.swift */,
+				B0BFFB1B24E0B86828718C7D /* NetworkReport.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -326,6 +329,7 @@
 				6B8B8134F1DDDC87BE04DCD5 /* LocationAccess.swift in Sources */,
 				64229B7AB4CEF8BE9AAF6CEE /* Manufacturers.swift in Sources */,
 				A4CD96AB40F5648AF3AAD567 /* MenuBarView.swift in Sources */,
+				39F863F456E2F59D190ADE82 /* NetworkReport.swift in Sources */,
 				48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */,
 				EE090D3DFBA68BEC1BFE30C4 /* RouterClient.swift in Sources */,
 				F3201B7AE31F9EB8519F3936 /* SettingsView.swift in Sources */,

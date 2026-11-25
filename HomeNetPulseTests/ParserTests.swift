@@ -228,4 +228,18 @@ final class ParserTests: XCTestCase {
         let r = await Pinger.ping("127.0.0.1", count: 2, timeout: 1)
         XCTAssertEqual(r.received, 2, r.error ?? "")
     }
+
+    func testBackhaulFromChannels() {
+        func station(_ name: String, _ ch5: String?, _ ch24: String?) -> BaseStation {
+            var txt: [String: String] = [:]
+            txt["raCh"] = ch5; txt["rCh2"] = ch24
+            return BaseStation(name: name, txt: txt)
+        }
+        let main = station("Main", "149", "6")
+        XCTAssertNil(main.backhaul(to: main))
+        XCTAssertEqual(station("TC", "112", "1").backhaul(to: main), .ethernet)
+        XCTAssertEqual(station("TC", "149", "1").backhaul(to: main), .possiblyWireless(band: "5 GHz"))
+        XCTAssertEqual(station("TC", "36", "6").backhaul(to: main), .possiblyWireless(band: "2.4 GHz"))
+        XCTAssertNil(station("TC", nil, nil).backhaul(to: main))
+    }
 }

@@ -164,6 +164,8 @@ struct MenuBarStatusView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
+                CopyReportButton(title: "Copy Details") { NetworkReport.network(model) }
+                    .controlSize(.small)
                 Button {
                     Task { await model.refresh() }
                 } label: {
