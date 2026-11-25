@@ -251,7 +251,7 @@ struct InternetDetailView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(settings.pingTargets.enumerated()), id: \.element) { i, t in
                         let r = model.internetPings[t]
-                        PingResultCard(label: r?.resolvedAddress.flatMap { $0 == t ? nil : $0 } ?? "Target",
+                        PingResultCard(label: r?.resolvedAddress.flatMap { $0 == t ? nil : $0 } ?? "Ping target",
                                        host: t, result: r, error: r?.received == 0 ? r?.error : nil,
                                        last: i == settings.pingTargets.count - 1)
                     }
@@ -260,6 +260,8 @@ struct InternetDetailView: View {
                 .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 Text("Change targets in Settings.").font(.caption).foregroundStyle(.secondary)
             }
+
+            DNSSection()
 
             if let b = model.broadband {
                 DetailCard(title: "Connection", systemImage: "network") {
@@ -516,6 +518,93 @@ private struct DeviceRow: View {
                 .init(label: "Manufacturer", value: device.manufacturer),
                 .init(label: "Services", value: device.services.joined(separator: ", ").nilIfEmpty),
             ])
+            if !last { Divider() }
+        }
+    }
+}
+
+/// DNS health: each server resolving each configured hostname.
+struct DNSSection: View {
+    @Environment(DashboardModel.self) private var model
+    @Environment(AppSettings.self) private var settings
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("DNS", systemImage: "character.book.closed")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                HealthPill(health: model.dnsHealth)
+                Spacer()
+                Button {
+                    Task { await model.refreshDNS() }
+                } label: {
+                    if model.dnsChecking { ProgressView().controlSize(.small) } else { Text("Run") }
+                }
+                .buttonStyle(.borderedProminent).controlSize(.small)
+                .disabled(model.dnsChecking)
+            }
+            VStack(spacing: 0) {
+                if model.dnsResults.isEmpty {
+                    Text(model.dnsChecking ? "Checking DNS…" : "Not checked yet.")
+                        .font(.callout).foregroundStyle(.secondary).padding(.vertical, 12)
+                }
+                ForEach(Array(model.dnsResults.enumerated()), id: \.element.id) { i, r in
+                    DNSServerRow(result: r, last: i == model.dnsResults.count - 1)
+                }
+            }
+            .padding(.horizontal, 14)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            Text("Each server is asked directly for \(settings.dnsHostnames.joined(separator: ", ")), so a broken resolver shows up even while cached names still work. “This device” is the DNS server this device is set to use; if only it fails, the router, ISP and public servers show where the problem is. Change the hostnames in Settings.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct DNSServerRow: View {
+    var result: DNSServerResult
+    var last: Bool
+    @State private var expanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button { withAnimation(.snappy) { expanded.toggle() } } label: {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(result.server.label).font(.callout.weight(.medium))
+                        Text(result.server.ip).font(.caption.monospaced()).foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 8)
+                    Text(result.summary).font(.caption.monospacedDigit())
+                        .foregroundStyle(result.health == .good ? Color.secondary : result.health.color)
+                        .lineLimit(1)
+                    HealthPill(health: result.health).fixedSize()
+                    Image(systemName: "chevron.down").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(expanded ? 180 : 0))
+                }
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if expanded {
+                VStack(spacing: 6) {
+                    ForEach(result.lookups) { l in
+                        HStack(spacing: 8) {
+                            Image(systemName: l.ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                                .foregroundStyle(l.ok ? Color.green : .red).font(.caption)
+                            Text(l.host).font(.caption.monospaced())
+                            Spacer(minLength: 8)
+                            Text(l.ok ? (l.addresses.first ?? "") : (l.error ?? "failed"))
+                                .font(.caption.monospaced()).foregroundStyle(l.ok ? Color.secondary : .red)
+                                .lineLimit(1).copyable(l.addresses.first)
+                            if let ms = l.ms, l.ok {
+                                Text(ms < 10 ? String(format: "%.1f ms", ms) : String(format: "%.0f ms", ms))
+                                    .font(.caption2.monospacedDigit()).foregroundStyle(.secondary).fixedSize()
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom, 10)
+            }
             if !last { Divider() }
         }
     }

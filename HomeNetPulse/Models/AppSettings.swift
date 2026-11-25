@@ -6,9 +6,12 @@ import Security
 @MainActor @Observable
 final class AppSettings {
     static let defaultTargets = ["1.1.1.1", "8.8.8.8"]
+    static let defaultDNSHostnames = ["apple.com", "google.com", "amazon.com"]
     static let defaultRouterURL = "http://192.168.0.254/"
 
     var pingTargets: [String] { didSet { save() } }
+    /// Hostnames resolved against each DNS server to check DNS health.
+    var dnsHostnames: [String] { didSet { save() } }
     var refreshInterval: Double { didSet { save() } }
     /// Ethernet MACs (waMA) of base stations that belong to "my" network.
     var trustedBaseStationMACs: Set<String> { didSet { save() } }
@@ -30,6 +33,7 @@ final class AppSettings {
     init() {
         Self.migrateFromSandboxContainer()
         pingTargets = defaults.stringArray(forKey: "pingTargets") ?? Self.defaultTargets
+        dnsHostnames = defaults.stringArray(forKey: "dnsHostnames") ?? Self.defaultDNSHostnames
         let interval = defaults.double(forKey: "refreshInterval")
         refreshInterval = interval == 0 ? 60 : interval
         trustedBaseStationMACs = Set(defaults.stringArray(forKey: "trustedMACs") ?? [])
@@ -51,7 +55,7 @@ final class AppSettings {
               let id = Bundle.main.bundleIdentifier else { return }
         let path = NSHomeDirectory() + "/Library/Containers/\(id)/Data/Library/Preferences/\(id).plist"
         if let old = NSDictionary(contentsOfFile: path) as? [String: Any] {
-            let keys = ["pingTargets", "refreshInterval", "trustedMACs", "trustedRouterMAC", "mainRouterMAC",
+            let keys = ["pingTargets", "dnsHostnames", "refreshInterval", "trustedMACs", "trustedRouterMAC", "mainRouterMAC",
                         "showMenuBarIcon", "showLatencyInMenuBar", "useLocationForWiFi"]
             for k in keys where d.object(forKey: k) == nil {
                 if let v = old[k] { d.set(v, forKey: k) }
@@ -63,6 +67,7 @@ final class AppSettings {
 
     private func save() {
         defaults.set(pingTargets, forKey: "pingTargets")
+        defaults.set(dnsHostnames, forKey: "dnsHostnames")
         defaults.set(refreshInterval, forKey: "refreshInterval")
         defaults.set(Array(trustedBaseStationMACs).sorted(), forKey: "trustedMACs")
         defaults.set(trustedRouterMAC, forKey: "trustedRouterMAC")

@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var routerURL = ""
     @State private var password = ""
     @State private var newTarget = ""
+    @State private var newHostname = ""
     @State private var saveMessage: (ok: Bool, text: String)?
 
     var body: some View {
@@ -64,6 +65,34 @@ struct SettingsView: View {
                     Button("Add", action: addTarget).disabled(newTarget.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
                 Button("Reset to 1.1.1.1 and 8.8.8.8") { settings.pingTargets = AppSettings.defaultTargets }
+            }
+
+            Section {
+                ForEach(settings.dnsHostnames, id: \.self) { h in
+                    HStack {
+                        Text(h).font(.body.monospaced())
+                        Spacer()
+                        Button { settings.dnsHostnames.removeAll { $0 == h } } label: { Image(systemName: "trash") }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("Remove \(h)")
+                    }
+                }
+                HStack {
+                    TextField("Add hostname", text: $newHostname)
+                        .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                        #endif
+                        .onSubmit(addHostname)
+                    Button("Add", action: addHostname)
+                        .disabled(newHostname.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                Button("Reset to apple.com, google.com, amazon.com") { settings.dnsHostnames = AppSettings.defaultDNSHostnames }
+            } header: {
+                Text("DNS Check")
+            } footer: {
+                Text("These names are resolved against your router, your ISP's DNS servers and public DNS on every refresh.")
             }
 
             #if os(macOS)
@@ -170,6 +199,14 @@ struct SettingsView: View {
             ? (true, "Saved to Keychain")
             : (false, "Keychain error \(status): \(SecCopyErrorMessageString(status, nil) as String? ?? "unknown")")
         Task { await model.refreshRouter() }
+    }
+
+    private func addHostname() {
+        let h = newHostname.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !h.isEmpty, !settings.dnsHostnames.contains(h) else { return }
+        settings.dnsHostnames.append(h)
+        newHostname = ""
+        Task { await model.refreshDNS() }
     }
 
     private func addTarget() {

@@ -158,7 +158,7 @@ struct DashboardView: View {
                 MetricGrid(items: settings.pingTargets.map { t in
                     let r = model.internetPings[t]
                     return .init(label: t, value: r?.shortSummary ?? "testing…", tint: r?.tint)
-                })
+                } + [Self.dnsMetric(model.primaryDNSResult, checking: model.dnsChecking)])
                 detailsFooter(.internet)
             }
         }
@@ -245,6 +245,17 @@ struct DashboardView: View {
             .init(label: "Firmware", value: s.firmware),
             .init(label: "Model", value: s.modelName),
         ]
+    }
+
+    static func dnsMetric(_ r: DNSServerResult?, checking: Bool) -> MetricGrid.Item {
+        guard let r else { return .init(label: "DNS", value: checking ? "testing…" : nil) }
+        let text: String = switch r.health {
+        case .good: "OK · \(r.summary)"
+        case .degraded: "Partial · \(r.summary)"
+        case .down: "Failing"
+        case .unknown: "—"
+        }
+        return .init(label: "DNS", value: text, tint: r.health == .good ? nil : r.health.color)
     }
 
     /// "↓1296 ↑1290 Mbps"

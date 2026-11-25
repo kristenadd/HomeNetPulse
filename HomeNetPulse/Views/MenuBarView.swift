@@ -102,7 +102,9 @@ struct MenuBarStatusView: View {
         return VStack(alignment: .leading, spacing: 0) {
             MenuChainRow(icon: "globe", title: "Internet", health: model.internetHealth,
                          detail: model.internetLatencyMs.map { String(format: "%.0f ms avg", $0) },
-                         secondary: settings.pingTargets.joined(separator: ", "),
+                         secondary: model.dnsHealth == .down ? "DNS isn't resolving names"
+                            : model.dnsHealth == .degraded ? "DNS partly failing"
+                            : settings.pingTargets.joined(separator: ", ") + (model.dnsHealth == .good ? " · DNS OK" : ""),
                          onDetails: { showDetails(.internet) })
             MenuChainConnector(health: model.gatewayHealth == .down ? .down : model.internetHealth)
             MenuChainRow(icon: "fibrechannel", title: "Fiber Gateway", health: model.gatewayHealth,

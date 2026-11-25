@@ -26,6 +26,11 @@ final class DashboardModel {
     var baseStations: [BaseStation] = []
     var discoveryError: String?
     var internetPings: [String: PingResult] = [:]
+    /// DNS check: each server × each hostname.
+    var dnsResults: [DNSServerResult] = []
+    /// This device's configured DNS servers.
+    var systemDNS: [String] = []
+    var dnsChecking = false
     var routerReachable: Bool?
     var routerLatencyMs: Double?
     var routerPing: PingResult?
@@ -103,14 +108,32 @@ final class DashboardModel {
 
     // MARK: - Derived health
 
-    var internetHealth: Health {
+    /// Connectivity only (pings), used for the reboot suggestion.
+    var pingHealth: Health {
         let results = settings.pingTargets.compactMap { internetPings[$0] }
         guard !results.isEmpty else { return .unknown }
         if results.allSatisfy({ $0.health == .down }) { return .down }
         return results.map(\.health).max() ?? .unknown
     }
 
-    var internetDown: Bool { internetHealth == .down }
+    /// The DNS server that matters most: this device's own, else the router, else the ISP's.
+    var primaryDNSResult: DNSServerResult? {
+        dnsResults.first { $0.server.label.hasPrefix("This device") }
+            ?? dnsResults.first { $0.server.label == "Router" }
+            ?? dnsResults.first { $0.server.label.hasPrefix("ISP") }
+            ?? dnsResults.first
+    }
+
+    var dnsHealth: Health { primaryDNSResult?.health ?? .unknown }
+
+    /// Internet health includes DNS: pings can succeed while names don't resolve.
+    var internetHealth: Health {
+        let p = pingHealth, d = dnsHealth
+        if p == .unknown { return d == .down ? .down : .unknown }
+        return max(p, d)
+    }
+
+    var internetDown: Bool { pingHealth == .down }
 
     var gatewayHealth: Health {
         guard let reachable = routerReachable else { return .unknown }
@@ -148,7 +171,8 @@ final class DashboardModel {
 
     /// One-line explanation of the worst problem, for the menu bar tooltip/header.
     var overallSummary: String {
-        if internetHealth == .down { return "Internet is unreachable" }
+        if pingHealth == .down { return "Internet is unreachable" }
+        if dnsHealth == .down { return "DNS isn't resolving names" }
         if gatewayHealth == .down { return "Fiber gateway is not responding" }
         if let r = mainRouter, r.health == .down { return "\(r.name) is not responding" }
         if let e = extenders.first(where: { $0.health == .down }) { return "\(e.name) is not responding" }
@@ -266,7 +290,51 @@ final class DashboardModel {
         async let internet: Void = refreshInternet()
         async let router: Void = refreshRouter()
         _ = await (airports, internet, router)
+        // DNS last: it needs the router's address and the ISP's DNS servers found above.
+        await refreshDNS()
         await refreshWiFi()
+    }
+
+    /// Servers to test: this device's configured DNS, the router, the ISP's and two public resolvers.
+    /// When this device's server is one of the others, the rows merge ("This device · Router").
+    var dnsServers: [DNSServer] {
+        var list: [DNSServer] = []
+        if let ip = mainRouter?.ipAddress ?? defaultGateway { list.append(DNSServer(label: "Router", ip: ip)) }
+        if let d = broadband?.primaryDNS { list.append(DNSServer(label: "ISP primary", ip: d)) }
+        if let d = broadband?.secondaryDNS { list.append(DNSServer(label: "ISP secondary", ip: d)) }
+        list.append(DNSServer(label: "Cloudflare", ip: "1.1.1.1"))
+        list.append(DNSServer(label: "Google", ip: "8.8.8.8"))
+        var seen = Set<String>()
+        list = list.filter { seen.insert($0.ip).inserted }
+        // This device's own servers go first.
+        var device: [DNSServer] = []
+        for (i, ip) in systemDNS.enumerated() {
+            let base = systemDNS.count > 1 ? "This device \(i + 1)" : "This device"
+            if let match = list.firstIndex(where: { $0.ip == ip }) {
+                device.append(DNSServer(label: "\(base) · \(list[match].label)", ip: ip))
+                list.remove(at: match)
+            } else {
+                device.append(DNSServer(label: base, ip: ip))
+            }
+        }
+        return device + list
+    }
+
+    func refreshDNS() async {
+        let hosts = settings.dnsHostnames
+        guard !hosts.isEmpty, !dnsChecking else { return }
+        dnsChecking = true
+        defer { dnsChecking = false }
+        systemDNS = SystemDNS.servers()
+        let servers = dnsServers
+        let results = await withTaskGroup(of: DNSServerResult.self) { group in
+            for s in servers { group.addTask { await DNSQuery.check(hosts, against: s) } }
+            var out: [DNSServerResult] = []
+            for await r in group { out.append(r) }
+            return out
+        }
+        let order = Dictionary(uniqueKeysWithValues: servers.enumerated().map { ($1.ip, $0) })
+        dnsResults = results.sorted { (order[$0.server.ip] ?? 0) < (order[$1.server.ip] ?? 0) }
     }
 
     func refreshInternet() async {

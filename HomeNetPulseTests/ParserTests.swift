@@ -106,6 +106,20 @@ final class ParserTests: XCTestCase {
         XCTAssertNil(Manufacturers.name(for: nil))
     }
 
+    func testDNSPacket() {
+        let q = DNSQuery.makeQuery(id: 0x1234, host: "apple.com")
+        XCTAssertEqual(Array(q.prefix(4)), [0x12, 0x34, 0x01, 0x00])
+        XCTAssertEqual(Array(q[12...]), [5] + Array("apple".utf8) + [3] + Array("com".utf8) + [0, 0, 1, 0, 1])
+        // Response: header + question + one A answer using a name pointer to offset 12.
+        var r: [UInt8] = [0x12, 0x34, 0x81, 0x80, 0, 1, 0, 1, 0, 0, 0, 0]
+        r += Array(q[12...])
+        r += [0xC0, 0x0C, 0, 1, 0, 1, 0, 0, 0, 60, 0, 4, 17, 253, 144, 10]
+        let parsed = DNSQuery.parseResponse(r, id: 0x1234)
+        XCTAssertEqual(parsed?.rcode, 0)
+        XCTAssertEqual(parsed?.addresses, ["17.253.144.10"])
+        XCTAssertNil(DNSQuery.parseResponse(r, id: 0x9999))
+    }
+
     func testPONState() {
         var s = BroadbandSummary(sections: [StatSection(title: "GPON Status", rows: [StatRow(key: "PON Link Status", value: "OPERATION (O5)")])])
         XCTAssertEqual(s.ponFriendly, "Connected (O5)")
