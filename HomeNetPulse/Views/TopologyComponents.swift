@@ -122,7 +122,7 @@ struct MetricGrid: View {
     }
     var items: [Item]
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), alignment: .topLeading)], alignment: .leading, spacing: 10) {
+        EqualColumns(minColumnWidth: 130, hSpacing: 8, vSpacing: 10) {
             ForEach(items) { item in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.label.uppercased()).font(.caption2.weight(.medium)).foregroundStyle(.secondary)
@@ -132,6 +132,7 @@ struct MetricGrid: View {
                         .lineLimit(1).minimumScaleFactor(0.75)
                         .copyable(item.value, label: item.label)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(.leading, Topology.iconSize + 12)

@@ -20,6 +20,7 @@
 		706F8275AC64ED79D095D119 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D64382380E1319474F1AB3A /* Assets.xcassets */; };
 		7873E85004F93DF21C809BBC /* LANScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71653689E511CB60186F676 /* LANScanner.swift */; };
 		8062FC07F869273FEB02AC73 /* DetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */; };
+		8798366BD9C3941025221D1B /* EqualColumns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 622A20B0AC4ABA6CF787457C /* EqualColumns.swift */; };
 		9537348C09EEA2D41A35348F /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC525BFC3112189279810E6 /* AppSettings.swift */; };
 		998A300A4D3240EA64E8EA96 /* UnicastMDNS.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE7E87F79B8FB5F3E8FDA9B /* UnicastMDNS.swift */; };
 		9A3B3C0B0E5E3DBDF19559D5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97EAC894F8A3C2E35BBDDBD5 /* Components.swift */; };
@@ -60,6 +61,7 @@
 		4BC525BFC3112189279810E6 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		597FB1E91702595566112483 /* Copyable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Copyable.swift; sourceTree = "<group>"; };
 		5F8EF5CD90A38C92CD2DEE3F /* BaseStation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseStation.swift; sourceTree = "<group>"; };
+		622A20B0AC4ABA6CF787457C /* EqualColumns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EqualColumns.swift; sourceTree = "<group>"; };
 		67845DEF76D4E358F881D2DD /* RouterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterClient.swift; sourceTree = "<group>"; };
 		7187496DA1D907A9A5265FAA /* HomeNetPulse-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "HomeNetPulse-iOS.entitlements"; sourceTree = "<group>"; };
 		78FCFD6DFB79CF0B71880FA7 /* SpeedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedTest.swift; sourceTree = "<group>"; };
@@ -171,6 +173,7 @@
 				C241A99A62E03940B089301F /* DashboardView.swift */,
 				37CE35D4B343C37336D5417A /* DetailComponents.swift */,
 				D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */,
+				622A20B0AC4ABA6CF787457C /* EqualColumns.swift */,
 				264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */,
 				C46DF420F0323839FC2266A0 /* MenuBarView.swift */,
 				A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */,
@@ -300,6 +303,7 @@
 				A2773AE3E58D61ED9816302B /* DefaultGateway.swift in Sources */,
 				2EDE804A61ED078215706B18 /* DetailComponents.swift in Sources */,
 				8062FC07F869273FEB02AC73 /* DetailViews.swift in Sources */,
+				8798366BD9C3941025221D1B /* EqualColumns.swift in Sources */,
 				C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */,
 				BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */,
 				F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */,

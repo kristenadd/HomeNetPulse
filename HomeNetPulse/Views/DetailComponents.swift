@@ -62,7 +62,7 @@ struct StatTile: View {
 struct StatTileGrid<Content: View>: View {
     @ViewBuilder var content: Content
     var body: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 10)], spacing: 10) { content }
+        EqualColumns(minColumnWidth: 140, hSpacing: 10, vSpacing: 10) { content }
     }
 }
 

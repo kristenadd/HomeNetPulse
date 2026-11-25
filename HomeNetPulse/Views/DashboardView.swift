@@ -97,6 +97,11 @@ struct DashboardView: View {
             }
             .background(Color.platformGroupedBackground)
             .navigationTitle("HomeNet Pulse")
+            #if os(iOS)
+            // A collapsing large title flips back and forth near the top while the live data
+            // re-renders, jolting the content up and down. Keep the compact title.
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .navigationDestination(for: Route.self) { destination($0, inInspector: false) }
             .inspector(isPresented: inspectorShown) {
                 Group {
