@@ -68,11 +68,12 @@ struct SettingsView: View {
 
             #if os(macOS)
             Section {
+                LaunchAtLoginToggle()
                 Toggle("Show status in menu bar", isOn: $settings.showMenuBarIcon)
                 Toggle("Show internet latency next to the icon", isOn: $settings.showLatencyInMenuBar)
                     .disabled(!settings.showMenuBarIcon)
             } header: {
-                Text("Menu Bar")
+                Text("Mac")
             } footer: {
                 Text("The icon stays monochrome while everything is healthy and turns orange or red when something needs attention. Monitoring keeps running while the main window is closed.")
             }

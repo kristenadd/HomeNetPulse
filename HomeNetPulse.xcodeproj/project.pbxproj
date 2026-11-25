@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		089D876262091DF43EA6669B /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1115846DC2AD50CFB7B28DCB /* DashboardModel.swift */; };
+		2CB12BEE41286A9701DE1CD8 /* LaunchAtLoginToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */; };
 		2EDE804A61ED078215706B18 /* DetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37CE35D4B343C37336D5417A /* DetailComponents.swift */; };
 		41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */; };
 		46431D160D9DC12761601C42 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241A99A62E03940B089301F /* DashboardView.swift */; };
@@ -44,6 +45,7 @@
 		0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopologyComponents.swift; sourceTree = "<group>"; };
 		1115846DC2AD50CFB7B28DCB /* DashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardModel.swift; sourceTree = "<group>"; };
 		1E7EADE7387AC70CE245B9BC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginToggle.swift; sourceTree = "<group>"; };
 		2D64382380E1319474F1AB3A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		37CE35D4B343C37336D5417A /* DetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailComponents.swift; sourceTree = "<group>"; };
 		4BC525BFC3112189279810E6 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -146,6 +148,7 @@
 				C241A99A62E03940B089301F /* DashboardView.swift */,
 				37CE35D4B343C37336D5417A /* DetailComponents.swift */,
 				D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */,
+				264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */,
 				C46DF420F0323839FC2266A0 /* MenuBarView.swift */,
 				A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */,
 				0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */,
@@ -268,6 +271,7 @@
 				C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */,
 				BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */,
 				F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */,
+				2CB12BEE41286A9701DE1CD8 /* LaunchAtLoginToggle.swift in Sources */,
 				A4CD96AB40F5648AF3AAD567 /* MenuBarView.swift in Sources */,
 				48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */,
 				EE090D3DFBA68BEC1BFE30C4 /* RouterClient.swift in Sources */,
