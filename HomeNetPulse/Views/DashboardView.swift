@@ -46,7 +46,15 @@ struct DashboardView: View {
 
     private var inspectorShown: Binding<Bool> {
         Binding(get: { usesInspector && inspected != nil },
-                set: { if !$0 { inspected = nil } })
+                set: { shown in
+                    #if os(macOS)
+                    // macOS reports the inspector as dismissed when a dialog shown from inside it
+                    // closes; the panel is closed only via its ✕ button there.
+                    _ = shown
+                    #else
+                    if !shown { inspected = nil }
+                    #endif
+                })
     }
 
     @ViewBuilder private func destination(_ route: Route, inInspector: Bool) -> some View {

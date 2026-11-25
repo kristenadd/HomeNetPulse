@@ -141,21 +141,19 @@ actor RouterClient {
 
         let start = Date()
         let deadline = start.addingTimeInterval(timeout)
-        var sawRunning = false
+        var lastNewCount = 0
+        var lastChange = start
         while Date() < deadline {
-            try await Task.sleep(for: .seconds(5))
-            let page = try await authenticatedPage("cgi-bin/speed.ha")
-            let running = SpeedTestParser.isRunning(page)
-            sawRunning = sawRunning || running
-            let entries = SpeedTestParser.parse(page)
-            // Done when the page stopped refreshing and the history has new rows.
-            if !running, let top = entries.first?.id, top != before {
+            try await Task.sleep(for: .seconds(4))
+            let entries = SpeedTestParser.parse(try await authenticatedPage("cgi-bin/speed.ha"))
+            // Rows added since we pressed Run (the gateway does upload first, then download).
+            let new = entries.prefix { $0.id != before }
+            if new.count != lastNewCount { lastNewCount = new.count; lastChange = Date() }
+            if new.contains(where: \.isDownload) && new.contains(where: { !$0.isDownload }) {
                 return entries
             }
-            // The gateway never showed a running test after a minute: give back what it has.
-            if !running && !sawRunning && Date().timeIntervalSince(start) > 60 {
-                return entries
-            }
+            // One direction finished but the other never showed up.
+            if !new.isEmpty && Date().timeIntervalSince(lastChange) > 45 { return entries }
         }
         throw RouterError.unexpectedPage("speed test did not finish within \(Int(timeout)) s")
     }

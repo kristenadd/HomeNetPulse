@@ -80,8 +80,6 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(runs[0].upload?.mbps, 1290.29)
         XCTAssertEqual(runs[0].latencyMs, 21)
         XCTAssertEqual(DashboardView.speedSummary(runs[0]), "↓1296 ↑1290 Mbps")
-        XCTAssertFalse(SpeedTestParser.isRunning(html))
-        XCTAssertTrue(SpeedTestParser.isRunning(#"<input type="hidden" name="hidden" value="freshen" />"#))
     }
 
     func testPONState() {

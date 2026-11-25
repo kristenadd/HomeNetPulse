@@ -72,9 +72,4 @@ enum SpeedTestParser {
         return runs.sorted { ($0.time ?? .distantPast) > ($1.time ?? .distantPast) }
     }
 
-    /// The page auto-refreshes ("freshen") while a test is running.
-    static func isRunning(_ html: String) -> Bool {
-        HTML.firstMatch(#"name="hidden"\s+value="([^"]*)""#, in: html) == "freshen"
-            || html.localizedCaseInsensitiveContains("in progress")
-    }
 }
