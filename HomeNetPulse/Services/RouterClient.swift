@@ -23,12 +23,13 @@ enum RouterError: LocalizedError {
 
 /// Client for AT&T / Arris fiber gateways (BGW210 / BGW320) at e.g. http://192.168.0.254/.
 actor RouterClient {
-    private let base: URL
+    nonisolated let baseURL: URL
+    private var base: URL { baseURL }
     private let password: String
     private let session: URLSession
 
     init(base: URL, password: String) {
-        self.base = base
+        self.baseURL = base
         self.password = password
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 60    // the gateway is slow: home.ha alone takes ~14 s
@@ -177,17 +178,38 @@ actor RouterClient {
     /// Restart the gateway via cgi-bin/restart.ha (requires the Device Access Code).
     func restart() async throws -> String {
         let html = try await authenticatedPage("cgi-bin/restart.ha")
-        guard let nonce = HTML.nonce(in: html),
-              let button = HTML.submitButtons(in: html).first(where: {
-                  $0.name.localizedCaseInsensitiveContains("restart") || $0.value.localizedCaseInsensitiveContains("restart")
-              }) else {
+        guard let form = RestartForm(html: html) else {
             throw RouterError.unexpectedPage("restart button not found")
         }
         do {
-            let result = try await post("cgi-bin/restart.ha", form: [("nonce", nonce), (button.name, button.value)])
+            let result = try await post("cgi-bin/restart.ha", form: form.fields)
             return HTML.title(in: result) ?? "Restart requested"
         } catch RouterError.unreachable {
             return "Restart requested — the gateway dropped the connection while rebooting."
         }
     }
+}
+
+/// The BGW restart page: a POST form with the page nonce and two submit buttons,
+/// `Restart` (name="Restart" value="Restart") and `Cancel`. There is no JavaScript confirmation.
+struct RestartForm: Equatable {
+    var nonce: String
+    var button: String
+    var value: String
+
+    init?(html: String) {
+        guard let nonce = HTML.nonce(in: html) else { return nil }
+        let buttons = HTML.submitButtons(in: html)
+        // Prefer the exact Restart button; never the Cancel button.
+        guard let b = buttons.first(where: { $0.name == "Restart" })
+                ?? buttons.first(where: {
+                    !$0.name.localizedCaseInsensitiveContains("cancel")
+                        && ($0.name.localizedCaseInsensitiveContains("restart") || $0.value.localizedCaseInsensitiveContains("restart"))
+                }) else { return nil }
+        self.nonce = nonce
+        self.button = b.name
+        self.value = b.value
+    }
+
+    var fields: [(String, String)] { [("nonce", nonce), (button, value)] }
 }

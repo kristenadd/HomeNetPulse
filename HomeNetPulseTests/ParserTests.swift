@@ -117,6 +117,23 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(s.firmware, "7.9.1")
     }
 
+    func testRestartForm() {
+        // Mirrors the BGW320 restart.ha form.
+        let html = """
+        <form method="post" action="/cgi-bin/restart.ha">
+        <input type="hidden" name="nonce" value="abc123" />
+        <input type="submit" name="Restart" class="cssbtn" value="Restart" />
+        <input type="submit" name="Cancel" class="cssbtn" value="Cancel" />
+        </form>
+        """
+        let form = RestartForm(html: html)
+        XCTAssertEqual(form?.nonce, "abc123")
+        XCTAssertEqual(form?.button, "Restart")
+        XCTAssertEqual(form?.fields.map { "\($0.0)=\($0.1)" }, ["nonce=abc123", "Restart=Restart"])
+        // A page with only a Cancel button must never produce a restart.
+        XCTAssertNil(RestartForm(html: #"<input type="hidden" name="nonce" value="x" /><input type="submit" name="Cancel" value="Cancel Restart" />"#))
+    }
+
     func testSubmitButtons() {
         let html = #"<input type="submit" name="Restart" class="x" value="Restart" /><input type="hidden" name="a" value="b">"#
         XCTAssertEqual(HTML.submitButtons(in: html).map(\.name), ["Restart"])

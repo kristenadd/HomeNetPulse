@@ -323,9 +323,34 @@ final class DashboardModel {
         rebooting = true
         defer { rebooting = false }
         do {
-            rebootStatus = try await client.restart()
+            _ = try await client.restart()
         } catch {
             rebootStatus = "Reboot failed: \(error.localizedDescription)"
+            return
         }
+        // Watch the gateway go down and come back (a BGW restart usually takes 3–5 minutes).
+        let started = Date()
+        rebootStatus = "Restart requested. Waiting for the gateway to go offline…"
+        var wentDown = false
+        while Date().timeIntervalSince(started) < 15 * 60 {
+            try? await Task.sleep(for: .seconds(10))
+            let probe = RouterClient(base: client.baseURL, password: "")
+            let up = (try? await probe.broadband()) != nil
+            let elapsed = Int(Date().timeIntervalSince(started))
+            let clock = String(format: "%d:%02d", elapsed / 60, elapsed % 60)
+            if !up {
+                wentDown = true
+                routerReachable = false
+                rebootStatus = "Gateway is restarting… (\(clock))"
+            } else if wentDown {
+                rebootStatus = "Gateway is back online after \(clock)."
+                await refresh()
+                return
+            } else if elapsed > 120 {
+                rebootStatus = "The gateway never went offline. The restart may not have started."
+                return
+            }
+        }
+        rebootStatus = "The gateway hasn't come back after 15 minutes. Check its lights and power."
     }
 }
