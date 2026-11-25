@@ -35,6 +35,14 @@ xcodebuild -scheme HomeNetPulse -destination 'platform=macOS' test
 
 This builds a Release copy, installs it as `/Applications/HomeNet Pulse.app` and launches it. The app runs from the menu bar. Run the script again after pulling changes to update it.
 
+## Installing on iPhone and iPad
+
+```bash
+./scripts/install-ios.sh
+```
+
+Builds a Release copy and installs and launches it on every paired iPhone and iPad that's available, or only on the device IDs you pass.
+
 ## Notes
 
 - Pings use an unprivileged ICMP datagram socket, so they need no root and no helper tool. On macOS the App Sandbox needs both `network.client` and `network.server` entitlements to receive ICMP replies.
