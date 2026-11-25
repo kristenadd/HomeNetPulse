@@ -111,7 +111,10 @@ enum LANScanner {
 
         // Devices that ignore ping still answer ARP; the kernel table has them now (macOS).
         let hostSet = Set(hosts)
-        for (ip, mac) in arpTable() where hostSet.contains(ip) {
+        var arp = arpViaLaunchd()
+        if arp.isEmpty { arp = arpFromTool() }
+        if arp.isEmpty { arp = arpTable() }
+        for (ip, mac) in arp where hostSet.contains(ip) {
             found[ip, default: LANDevice(ip: ip)].mac = mac
         }
         // Ourselves
@@ -179,7 +182,93 @@ enum LANScanner {
         }
     }
 
-    /// IPv4 → MAC from the kernel ARP cache (macOS only; iOS doesn't expose it).
+    /// IPv4 → MAC by running `/usr/sbin/arp -an` (macOS, unsandboxed). The kernel only hands the
+    /// ARP table to privileged tools, so this is the reliable way for an app to read it.
+    static func arpFromTool() -> [String: String] {
+        #if os(macOS)
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/sbin/arp")
+        p.arguments = ["-an"]
+        let out = Pipe()
+        p.standardOutput = out
+        p.standardError = FileHandle.nullDevice
+        do { try p.run() } catch { return [:] }
+        let data = out.fileHandleForReading.readDataToEndOfFile()
+        p.waitUntilExit()
+        return parseArp(String(decoding: data, as: UTF8.self))
+        #else
+        return [:]
+        #endif
+    }
+
+    /// macOS hides LAN neighbour (ARP) entries from processes an app launches directly, but not from
+    /// a job launchd starts on the app's behalf. Run `arp -an` as a one-off user agent and read its output.
+    static func arpViaLaunchd(timeout: TimeInterval = 4) -> [String: String] {
+        #if os(macOS)
+        let fm = FileManager.default
+        let id = UUID().uuidString
+        let label = "com.kristenadd.HomeNetPulse.arp.\(id)"
+        let dir = fm.temporaryDirectory
+        let outURL = dir.appendingPathComponent("hnp-arp-\(id).txt")
+        let plistURL = dir.appendingPathComponent("hnp-arp-\(id).plist")
+        defer { try? fm.removeItem(at: outURL); try? fm.removeItem(at: plistURL) }
+
+        let job: [String: Any] = [
+            "Label": label,
+            "ProgramArguments": ["/usr/sbin/arp", "-an"],
+            "StandardOutPath": outURL.path,
+            "RunAtLoad": true,
+            "KeepAlive": false,
+            "LaunchOnlyOnce": true,
+        ]
+        guard let data = try? PropertyListSerialization.data(fromPropertyList: job, format: .xml, options: 0),
+              (try? data.write(to: plistURL)) != nil else { return [:] }
+
+        let domain = "gui/\(getuid())"
+        func launchctl(_ args: [String]) {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+            p.arguments = args
+            p.standardOutput = FileHandle.nullDevice
+            p.standardError = FileHandle.nullDevice
+            try? p.run()
+            p.waitUntilExit()
+        }
+        launchctl(["bootstrap", domain, plistURL.path])
+        defer { launchctl(["bootout", "\(domain)/\(label)"]) }
+
+        // Wait for the output to appear and stop growing.
+        let deadline = Date().addingTimeInterval(timeout)
+        var lastSize = -1
+        while Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.25)
+            let size = (try? fm.attributesOfItem(atPath: outURL.path)[.size] as? Int) ?? 0
+            if size > 0 && size == lastSize { break }
+            lastSize = size
+        }
+        let text = (try? String(contentsOf: outURL, encoding: .utf8)) ?? ""
+        return parseArp(text)
+        #else
+        return [:]
+        #endif
+    }
+
+    /// Parses lines like `? (192.168.1.1) at 88:1f:a1:28:58:6b on en0 ifscope [ethernet]`.
+    /// arp drops leading zeros (`0:e:c6:…`), so octets are re-padded.
+    static func parseArp(_ text: String) -> [String: String] {
+        var out: [String: String] = [:]
+        for line in text.split(separator: "\n") {
+            guard let ip = HTML.firstMatch(#"\(([0-9.]+)\)"#, in: String(line)),
+                  let raw = HTML.firstMatch(#" at ([0-9a-fA-F:]+) "#, in: String(line)) else { continue }
+            let octets = raw.split(separator: ":")
+            guard octets.count == 6 else { continue }
+            let mac = octets.map { $0.count == 1 ? "0" + $0.lowercased() : $0.lowercased() }.joined(separator: ":")
+            if mac != "ff:ff:ff:ff:ff:ff" { out[ip] = mac }
+        }
+        return out
+    }
+
+    /// IPv4 → MAC from the kernel ARP cache via sysctl (works only for privileged processes).
     static func arpTable() -> [String: String] {
         #if os(macOS)
         var mib: [Int32] = [CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, 0x400 /* RTF_LLINFO */]

@@ -20,9 +20,9 @@ targets:
     entitlements:
       path: HomeNetPulse/HomeNetPulse.entitlements
       properties:
-        com.apple.security.app-sandbox: true
-        com.apple.security.network.client: true
-        com.apple.security.network.server: true
+        # Personal app: not sandboxed so it can run /usr/sbin/arp (the ARP table is hidden from
+        # sandboxed processes) and use Bonjour for any service type.
+        com.apple.security.app-sandbox: false
         com.apple.security.personal-information.location: true
     info:
       path: HomeNetPulse/Info.plist

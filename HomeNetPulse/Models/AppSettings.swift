@@ -28,6 +28,7 @@ final class AppSettings {
     private let defaults = UserDefaults.standard
 
     init() {
+        Self.migrateFromSandboxContainer()
         pingTargets = defaults.stringArray(forKey: "pingTargets") ?? Self.defaultTargets
         let interval = defaults.double(forKey: "refreshInterval")
         refreshInterval = interval == 0 ? 60 : interval
@@ -40,6 +41,24 @@ final class AppSettings {
         let creds = RouterCredentialStore.load()
         routerURL = creds?.url ?? Self.defaultRouterURL
         routerPassword = creds?.password ?? ""
+    }
+
+    /// The app used to be sandboxed; its preferences lived in its container. Copy them once.
+    private static func migrateFromSandboxContainer() {
+        #if os(macOS)
+        let d = UserDefaults.standard
+        guard !d.bool(forKey: "migratedFromSandbox"),
+              let id = Bundle.main.bundleIdentifier else { return }
+        let path = NSHomeDirectory() + "/Library/Containers/\(id)/Data/Library/Preferences/\(id).plist"
+        if let old = NSDictionary(contentsOfFile: path) as? [String: Any] {
+            let keys = ["pingTargets", "refreshInterval", "trustedMACs", "trustedRouterMAC", "mainRouterMAC",
+                        "showMenuBarIcon", "showLatencyInMenuBar", "useLocationForWiFi"]
+            for k in keys where d.object(forKey: k) == nil {
+                if let v = old[k] { d.set(v, forKey: k) }
+            }
+        }
+        d.set(true, forKey: "migratedFromSandbox")
+        #endif
     }
 
     private func save() {

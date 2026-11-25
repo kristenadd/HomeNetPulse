@@ -370,7 +370,7 @@ struct DevicesDetailView: View {
         var list = model.lanDevices
         if !search.isEmpty {
             list = list.filter { d in
-                [model.displayName(of: d), d.ip, d.services.joined(separator: " ")]
+                [model.displayName(of: d), d.ip, d.mac ?? "", d.services.joined(separator: " ")]
                     .contains { $0.localizedCaseInsensitiveContains(search) }
             }
         }
@@ -390,7 +390,7 @@ struct DevicesDetailView: View {
                          onClose: onClose)
 
             HStack(spacing: 10) {
-                TextField("Search name, IP or type", text: $search)
+                TextField("Search name, IP, MAC or type", text: $search)
                     .textFieldStyle(.roundedBorder)
                 Picker("Sort", selection: $sort) {
                     ForEach(Sort.allCases, id: \.self) { Text($0.rawValue).tag($0) }
@@ -423,7 +423,7 @@ struct DevicesDetailView: View {
             .padding(.horizontal, 14)
             .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-            Text("Found by pinging every address on your network and reading Bonjour names. Devices that are asleep or block ping may be missing until they wake.")
+            Text("Found by pinging every address on your network, then reading names over Bonjour and, on Mac, hardware addresses from the ARP table. Devices that are asleep may be missing until they wake.")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -480,6 +480,16 @@ private struct DeviceRow: View {
                     }
                     Text(([device.ip] + device.services).joined(separator: " · "))
                         .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    if let mac = device.mac {
+                        HStack(spacing: 6) {
+                            Text(mac).font(.caption2.monospaced()).foregroundStyle(.secondary)
+                            if device.isPrivateMAC {
+                                Text("Private address").font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .help("A randomized Wi-Fi address, typical for iPhones, iPads and Macs.")
+                            }
+                        }
+                    }
                 }
                 Spacer(minLength: 8)
                 if let ms = device.latencyMs {
@@ -495,6 +505,7 @@ private struct DeviceRow: View {
             .copyMenu(title: name, items: [
                 .init(label: "Name", value: device.hostName),
                 .init(label: "IP Address", value: device.ip),
+                .init(label: "MAC Address", value: device.mac),
                 .init(label: "Services", value: device.services.joined(separator: ", ").nilIfEmpty),
             ])
             if !last { Divider() }

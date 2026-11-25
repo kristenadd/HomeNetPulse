@@ -328,6 +328,7 @@ struct DashboardView: View {
                     MetricGrid(items: [
                         .init(label: "Devices", value: devices.isEmpty ? nil : "\(devices.count)"),
                         .init(label: "Named", value: devices.isEmpty ? nil : "\(named)"),
+                        .init(label: "Private MACs", value: devices.contains { $0.mac != nil } ? "\(devices.filter(\.isPrivateMAC).count)" : nil),
                         .init(label: "Slow (>100 ms)", value: devices.isEmpty ? nil : "\(slow)", tint: slow > 0 ? .orange : nil),
                         .init(label: "Last scan", value: model.lastLANScan.map { $0.formatted(date: .omitted, time: .shortened) }),
                     ])

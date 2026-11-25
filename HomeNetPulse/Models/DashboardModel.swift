@@ -73,6 +73,9 @@ final class DashboardModel {
     func start() {
         guard autoRefreshTask == nil else { return }
         browser.start()
+        if settings.useLocationForWiFi && !LocationAccess.shared.isAuthorized && !LocationAccess.shared.isDenied {
+            LocationAccess.shared.request()
+        }
         // Wi-Fi association changes faster than the full refresh; poll it cheaply.
         wifiTask = Task { [weak self] in
             while !Task.isCancelled {

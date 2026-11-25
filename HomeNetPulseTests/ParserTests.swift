@@ -82,6 +82,22 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(DashboardView.speedSummary(runs[0]), "↓1296 ↑1290 Mbps")
     }
 
+    func testArpParsing() {
+        let text = """
+        ? (192.168.1.1) at 88:1f:a1:28:58:6b on en0 ifscope [ethernet]
+        ? (192.168.1.2) at (incomplete) on en0 ifscope [ethernet]
+        ? (192.168.1.20) at 0:e:c6:8b:d8:40 on en0 ifscope [ethernet]
+        ? (192.168.1.255) at ff:ff:ff:ff:ff:ff on en0 ifscope [ethernet]
+        """
+        let arp = LANScanner.parseArp(text)
+        XCTAssertEqual(arp["192.168.1.1"], "88:1f:a1:28:58:6b")
+        XCTAssertEqual(arp["192.168.1.20"], "00:0e:c6:8b:d8:40")
+        XCTAssertNil(arp["192.168.1.2"])
+        XCTAssertNil(arp["192.168.1.255"])
+        XCTAssertTrue(LANDevice(ip: "1", mac: "da:a1:19:00:00:01").isPrivateMAC)
+        XCTAssertFalse(LANDevice(ip: "1", mac: "88:1f:a1:28:58:6b").isPrivateMAC)
+    }
+
     func testPONState() {
         var s = BroadbandSummary(sections: [StatSection(title: "GPON Status", rows: [StatRow(key: "PON Link Status", value: "OPERATION (O5)")])])
         XCTAssertEqual(s.ponFriendly, "Connected (O5)")

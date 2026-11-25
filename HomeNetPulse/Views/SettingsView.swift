@@ -92,6 +92,15 @@ struct SettingsView: View {
                     Text("Detect connected base station")
                     #endif
                 }
+                if settings.useLocationForWiFi && LocationAccess.shared.isAuthorized {
+                    Label("Location allowed", systemImage: "location.fill").font(.caption).foregroundStyle(.green)
+                } else if settings.useLocationForWiFi && !LocationAccess.shared.isDenied {
+                    HStack {
+                        Label("Waiting for Location permission", systemImage: "location").font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Ask Again") { LocationAccess.shared.request() }.controlSize(.small)
+                    }
+                }
                 if settings.useLocationForWiFi && LocationAccess.shared.isDenied {
                     Label("Location access is off for HomeNet Pulse. Turn it on in System Settings › Privacy & Security › Location Services.",
                           systemImage: "location.slash")
