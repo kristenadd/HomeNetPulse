@@ -37,6 +37,8 @@ final class DashboardModel {
     var lastRefresh: Date?
     var rebootStatus: String?
     var rebooting = false
+    /// Set by the menu bar popup to ask the main window to show an item's details.
+    var requestedRoute: Route?
 
     private var autoRefreshTask: Task<Void, Never>?
 

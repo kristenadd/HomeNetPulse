@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum Route: Hashable {
+    case internet
     case gateway
     case station(String)
 }
@@ -24,6 +25,17 @@ struct DashboardView: View {
         #endif
     }
 
+    /// Show details requested from the menu bar (never toggles closed).
+    private func showRequestedRoute() {
+        guard let route = model.requestedRoute else { return }
+        model.requestedRoute = nil
+        if usesInspector {
+            withAnimation(.snappy) { inspected = route }
+        } else {
+            path = NavigationPath([route])
+        }
+    }
+
     private func open(_ route: Route) {
         if usesInspector {
             withAnimation(.snappy) { inspected = (inspected == route) ? nil : route }
@@ -40,6 +52,7 @@ struct DashboardView: View {
     @ViewBuilder private func destination(_ route: Route, inInspector: Bool) -> some View {
         let close: (() -> Void)? = inInspector ? { withAnimation(.snappy) { inspected = nil } } : nil
         switch route {
+        case .internet: InternetDetailView(onClose: close)
         case .gateway: GatewayDetailView(onClose: close)
         case .station(let id):
             if let s = model.baseStations.first(where: { $0.id == id }) { BaseStationDetail(station: s, onClose: close) }
@@ -109,6 +122,8 @@ struct DashboardView: View {
             }
         }
         .task { model.start() }
+        .onAppear { showRequestedRoute() }
+        .onChange(of: model.requestedRoute) { showRequestedRoute() }
     }
 
     private var ispHopLabel: String? {
@@ -127,6 +142,8 @@ struct DashboardView: View {
                 return .init(label: t, value: r?.shortSummary ?? "testing…", tint: r?.tint)
             })
         }
+        .tappableCard { open(.internet) }
+        .selectedOutline(inspected == .internet)
         .copyMenu(title: "Internet", items: [.init(label: "WAN IP", value: model.broadband?.wanIPv4)]
                   + settings.pingTargets.map { .init(label: $0, value: model.internetPings[$0]?.shortSummary) })
     }

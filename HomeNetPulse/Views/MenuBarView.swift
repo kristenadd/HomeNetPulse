@@ -102,24 +102,42 @@ struct MenuBarStatusView: View {
         return VStack(alignment: .leading, spacing: 0) {
             MenuChainRow(icon: "globe", title: "Internet", health: model.internetHealth,
                          detail: model.internetLatencyMs.map { String(format: "%.0f ms avg", $0) },
-                         secondary: settings.pingTargets.joined(separator: ", "))
+                         secondary: settings.pingTargets.joined(separator: ", "),
+                         onDetails: { showDetails(.internet) })
             MenuChainConnector(health: model.gatewayHealth == .down ? .down : model.internetHealth)
             MenuChainRow(icon: "fibrechannel", title: "Fiber Gateway", health: model.gatewayHealth,
                          detail: model.routerReachable == false ? "Unreachable" : model.routerPing?.shortSummary,
-                         secondary: [b?.lineState.map { "Line \($0)" }, b?.ponFriendly].compactMap { $0 }.joined(separator: " · ").nilIfEmpty)
+                         secondary: [b?.lineState.map { "Line \($0)" }, b?.ponFriendly].compactMap { $0 }.joined(separator: " · ").nilIfEmpty,
+                         onDetails: { showDetails(.gateway) })
             MenuChainConnector(health: model.mainRouter?.health ?? .unknown)
             if let r = model.mainRouter {
                 MenuChainRow(icon: "wifi.router.fill", title: r.name, health: r.health,
-                             detail: r.ping?.shortSummary, secondary: r.ipAddress)
+                             detail: r.ping?.shortSummary, secondary: r.ipAddress,
+                             onDetails: { showDetails(.station(r.id)) })
             } else {
                 MenuChainRow(icon: "wifi.router", title: "Router", health: .unknown, detail: nil, secondary: "Searching…")
             }
             ForEach(model.extenders) { e in
                 MenuChainConnector(health: e.health)
                 MenuChainRow(icon: "wifi.router", title: e.name, health: e.health,
-                             detail: e.ping?.shortSummary, secondary: e.ipAddress)
+                             detail: e.ping?.shortSummary, secondary: e.ipAddress,
+                             onDetails: { showDetails(.station(e.id)) })
             }
         }
+    }
+
+    /// Open the main window with this item's details showing.
+    private func showDetails(_ route: Route) {
+        model.requestedRoute = route
+        openMainWindow()
+    }
+
+    /// Close this popup, then bring up the main window.
+    private func openMainWindow() {
+        let popup = NSApp.keyWindow
+        openWindow(id: "main")
+        NSApp.activate()
+        popup?.close()
     }
 
     private var footer: some View {
@@ -142,15 +160,13 @@ struct MenuBarStatusView: View {
                 .disabled(model.isRefreshing)
             }
             HStack {
-                Button("Open HomeNet Pulse") {
-                    openWindow(id: "main")
-                    NSApp.activate()
-                }
+                Button("Open HomeNet Pulse") { openMainWindow() }
                 .buttonStyle(.borderedProminent)
-                ManageGatewayButton()
                 Button("Settings…") {
+                    let popup = NSApp.keyWindow
                     openSettings()
                     NSApp.activate()
+                    popup?.close()
                 }
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
@@ -167,6 +183,8 @@ private struct MenuChainRow: View {
     var health: Health
     var detail: String?
     var secondary: String?
+    var onDetails: (() -> Void)? = nil
+    @State private var hovering = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -178,14 +196,27 @@ private struct MenuChainRow: View {
                 }
             }
             Spacer(minLength: 6)
-            if let detail {
+            if hovering, let onDetails {
+                Button("Details", action: onDetails)
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+                    .transition(.opacity)
+            } else if let detail {
                 Text(detail).font(.caption.monospacedDigit())
                     .foregroundStyle(health == .good || health == .unknown ? Color.secondary : health.color)
                     .lineLimit(1)
+                    .transition(.opacity)
             }
             Circle().fill(health.color).frame(width: 8, height: 8)
                 .help(health.label)
         }
+        .padding(.vertical, 3)
+        .padding(.horizontal, 6)
+        .background(hovering && onDetails != nil ? Color.primary.opacity(0.06) : .clear,
+                    in: RoundedRectangle(cornerRadius: 8))
+        .padding(.horizontal, -6)
+        .contentShape(Rectangle())
+        .onHover { h in withAnimation(.easeOut(duration: 0.12)) { hovering = h } }
     }
 }
 

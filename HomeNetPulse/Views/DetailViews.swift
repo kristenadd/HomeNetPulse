@@ -198,3 +198,58 @@ struct BaseStationDetail: View {
         }
     }
 }
+
+struct InternetDetailView: View {
+    @Environment(DashboardModel.self) private var model
+    @Environment(AppSettings.self) private var settings
+    var onClose: (() -> Void)?
+
+    var body: some View {
+        let results = settings.pingTargets.compactMap { model.internetPings[$0] }
+        let loss = results.isEmpty ? nil : results.map(\.lossPercent).reduce(0, +) / Double(results.count)
+        let jitter = results.compactMap(\.jitterMs)
+        DetailPage(title: "Internet") {
+            DetailHeader(icon: "globe", title: "Internet",
+                         subtitle: model.broadband?.wanIPv4.map { "WAN \($0)" },
+                         health: model.internetHealth, onClose: onClose)
+
+            StatTileGrid {
+                StatTile(label: "Avg latency", value: model.internetLatencyMs.map { String(format: "%.1f", $0) } ?? "—", unit: "ms")
+                StatTile(label: "Loss", value: loss.map { String(format: "%.0f", $0) } ?? "—", unit: "%",
+                         tint: (loss ?? 0) > 0 ? .orange : nil)
+                StatTile(label: "Jitter", value: jitter.isEmpty ? "—" : String(format: "%.1f", jitter.reduce(0, +) / Double(jitter.count)), unit: "ms")
+                StatTile(label: "Targets", value: "\(settings.pingTargets.count)")
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Label("Ping from this device", systemImage: "dot.radiowaves.left.and.right")
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Run") { Task { await model.refreshInternet() } }
+                        .buttonStyle(.borderedProminent).controlSize(.small)
+                }
+                VStack(spacing: 0) {
+                    ForEach(Array(settings.pingTargets.enumerated()), id: \.element) { i, t in
+                        let r = model.internetPings[t]
+                        PingResultCard(label: r?.resolvedAddress.flatMap { $0 == t ? nil : $0 } ?? "Target",
+                                       host: t, result: r, error: r?.received == 0 ? r?.error : nil,
+                                       last: i == settings.pingTargets.count - 1)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                Text("Change targets in Settings.").font(.caption).foregroundStyle(.secondary)
+            }
+
+            if let b = model.broadband {
+                DetailCard(title: "Connection", systemImage: "network") {
+                    DetailRow(key: "WAN IPv4", value: b.wanIPv4)
+                    DetailRow(key: "ISP gateway", value: b.gatewayIPv4)
+                    DetailRow(key: "Primary DNS", value: b.primaryDNS)
+                    DetailRow(key: "Secondary DNS", value: b.secondaryDNS, last: true)
+                }
+            }
+        }
+    }
+}
