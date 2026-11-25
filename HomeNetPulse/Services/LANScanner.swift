@@ -117,11 +117,28 @@ enum LANScanner {
         // Ourselves
         found[iface.ip, default: LANDevice(ip: iface.ip, latencyMs: 0)].mac = iface.mac
 
-        // Names: Bonjour first (friendly names like "Kristen's iPad"), then reverse DNS.
+        // Names: ask each device directly over unicast mDNS (friendly names like "Kristen's iPad"),
+        // then system Bonjour (only declared types work in the sandbox), then reverse DNS.
+        let direct = await withTaskGroup(of: (String, UnicastMDNS.Answer?).self) { group in
+            for ip in found.keys {
+                group.addTask {
+                    // Retry once with a longer wait for slow (sleepy) responders.
+                    if let a = await UnicastMDNS.query(ip) { return (ip, a) }
+                    return (ip, await UnicastMDNS.query(ip, timeout: 2.5))
+                }
+            }
+            var out: [String: UnicastMDNS.Answer] = [:]
+            for await (ip, a) in group { if let a { out[ip] = a } }
+            return out
+        }
+        for (ip, a) in direct {
+            if let name = BonjourNamer.bestName(from: a) { found[ip]?.hostName = name }
+            found[ip]?.services = BonjourNamer.kinds(for: a.serviceTypes)
+        }
         let bonjour = await BonjourNamer.discover(hosts: hostSet)
         for (ip, info) in bonjour {
-            found[ip, default: LANDevice(ip: ip)].hostName = info.name
-            found[ip]?.services = info.kinds
+            if found[ip]?.hostName == nil { found[ip, default: LANDevice(ip: ip)].hostName = info.name }
+            for k in info.kinds where !(found[ip]?.services.contains(k) ?? false) { found[ip]?.services.append(k) }
         }
         let unnamed = found.values.filter { $0.hostName == nil }.map(\.ip)
         let names = await withTaskGroup(of: (String, String?).self) { group in
@@ -220,6 +237,29 @@ enum BonjourNamer {
 
     struct Info: Sendable { var name: String; var kinds: [String]; var priority: Int }
 
+    /// Friendly kinds for advertised service types, in priority order, deduplicated.
+    static func kinds(for types: [String]) -> [String] {
+        var out: [String] = []
+        for t in serviceTypes where types.contains(t.type) && !out.contains(t.kind) { out.append(t.kind) }
+        return out
+    }
+
+    /// Best label from a unicast mDNS answer: a service instance name, else the host name.
+    static func bestName(from a: UnicastMDNS.Answer) -> String? {
+        for type in UnicastMDNS.namingTypes {
+            if let inst = a.instances[type]?.first {
+                let clean = cleanName(inst)
+                if !isOpaque(clean) && !clean.isEmpty { return clean }
+            }
+        }
+        guard var host = a.hostName else { return nil }
+        for suffix in [".local", "."] where host.hasSuffix(suffix) { host.removeLast(suffix.count) }
+        // "Kristen-iPad-Mini" → "Kristen iPad Mini"
+        if isOpaque(host) { return nil }
+        host = cleanName(host.replacingOccurrences(of: "-", with: " "))
+        return host.isEmpty ? nil : host
+    }
+
     static func discover(hosts: Set<String>, browseFor seconds: Double = 3.5) async -> [String: Info] {
         // 1. Browse every type at once.
         let instances = await browse(seconds: seconds)
@@ -254,12 +294,14 @@ enum BonjourNamer {
         if let at = n.firstIndex(of: "@") { n = String(n[n.index(after: at)...]) }
         // Chromecast-style "Model-<32 hex id>" → "Model"
         n = n.replacingOccurrences(of: "-[0-9a-fA-F]{32}$", with: "", options: .regularExpression)
-        return n
+        // "iRobot 381488D5B4AE…" / "hubv2 0d052a83…" → drop trailing hex IDs
+        n = n.replacingOccurrences(of: "[ _-][0-9a-fA-F]{12,}$", with: "", options: .regularExpression)
+        return n.trimmingCharacters(in: .whitespaces)
     }
 
     /// Names that are just hex identifiers (e.g. Matter) aren't useful labels.
     static func isOpaque(_ name: String) -> Bool {
-        name.range(of: "^[0-9A-Fa-f-]{16,}$", options: .regularExpression) != nil
+        name.range(of: "^[0-9A-Fa-f-]{12,}$", options: .regularExpression) != nil
     }
 
     static func browse(seconds: Double) async -> [(NWEndpoint, String, Int)] {
