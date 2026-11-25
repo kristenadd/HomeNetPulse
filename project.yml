@@ -27,6 +27,7 @@ targets:
       path: HomeNetPulse/Info.plist
       properties:
         CFBundleDisplayName: HomeNet Pulse
+        LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]

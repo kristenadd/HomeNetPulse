@@ -3,9 +3,25 @@ import SwiftUI
 #if os(macOS)
 import AppKit
 
+extension Notification.Name {
+    static let openMainWindow = Notification.Name("HomeNetPulse.openMainWindow")
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// The app is LSUIElement (menu-bar only) by default; become a regular Dock app at launch
+    /// only when the menu bar icon is turned off.
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(Self.menuBarIconEnabled ? .accessory : .regular)
+    }
+
     /// SwiftUI quits a single-`Window` app when that window closes; keep running while the
     /// menu bar status icon is enabled so monitoring continues in the background.
+    /// Launching the app again (Finder, Spotlight, Dock) opens the main window.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        NotificationCenter.default.post(name: .openMainWindow, object: nil)
+        return false
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         !Self.menuBarIconEnabled
     }
@@ -54,6 +70,9 @@ struct HomeNetPulseApp: App {
                 .onDisappear { AppDelegate.mainWindowVisibilityChanged(false) }
         }
         .defaultSize(width: 1100, height: 900)
+        // Start in the menu bar only; the window opens from the menu bar (or relaunching the app).
+        .defaultLaunchBehavior(AppDelegate.menuBarIconEnabled ? .suppressed : .presented)
+        .restorationBehavior(.disabled)
         MenuBarExtra(isInserted: Binding(get: { settings.showMenuBarIcon },
                                          set: { settings.showMenuBarIcon = $0 })) {
             MenuBarStatusView()

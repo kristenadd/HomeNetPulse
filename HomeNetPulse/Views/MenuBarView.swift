@@ -6,6 +6,7 @@ import AppKit
 struct MenuBarLabel: View {
     @Environment(DashboardModel.self) private var model
     @Environment(AppSettings.self) private var settings
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         let health = model.overallHealth
@@ -16,6 +17,10 @@ struct MenuBarLabel: View {
             }
         }
         .task { model.start() }   // keep monitoring even when the main window is closed
+        .onReceive(NotificationCenter.default.publisher(for: .openMainWindow)) { _ in
+            openWindow(id: "main")
+            NSApp.activate()
+        }
         .accessibilityLabel("HomeNet Pulse: \(model.overallSummary)")
     }
 
