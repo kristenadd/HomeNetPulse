@@ -120,6 +120,53 @@ final class ParserTests: XCTestCase {
         XCTAssertNil(DNSQuery.parseResponse(r, id: 0x9999))
     }
 
+    func testFiberStatus() {
+        let html = """
+        <table><tbody>
+        <tr><th scope="row" width="47%">Optical WAN Operational Status</th>
+                 <td class="col2">Up                 </td></tr>
+        <tr><th scope="row">Link State</th>
+                 <td class="col2">Up                 </td></tr>
+        <tr><th scope="row">Wave Length</th><td class="col2">1270 nm</td></tr>
+        <tr><th scope="row">Vendor Name</th><td class="col2">NOKIA</td></tr>
+        </tbody></table>
+        <div><h1>Temperature&nbsp;&nbsp;Currently 42</h1>
+        <table class="grid table100" summary="Temperature table"><thead><tr><th>&nbsp;</th><th>Low</th><th>High</th></tr></thead>
+        <tbody>
+        <tr class="a"><td class="heading" scope="row">Alarm</td>
+                 <td>0                 (Threshold -50)</td>
+                 <td>0                 (Threshold 95)</td>
+                 </tr>
+        <tr class="b"><td class="heading" scope="row">Warning</td>
+                 <td>0                 (Threshold -45)</td>
+                 <td>0                 (Threshold 90)</td>
+                 </tr>
+        </tbody></table></div>
+        <div><h1>Rx Power&nbsp;&nbsp;Currently -226</h1>
+        <table><tbody>
+        <tr class="a"><td class="heading" scope="row">Alarm</td><td>0 (Threshold -292)</td><td>0 (Threshold -90)</td></tr>
+        <tr class="b"><td class="heading" scope="row">Warning</td><td>0 (Threshold -279)</td><td>0 (Threshold -100)</td></tr>
+        </tbody></table></div>
+        """
+        let f = FiberStatusParser.parse(html)
+        XCTAssertEqual(f.linkUp, true)
+        XCTAssertEqual(f.wavelength, "1270 nm")
+        XCTAssertEqual(f.metrics.map(\.name), ["Temperature", "Rx Power"])
+        let rx = f.metric("Rx Power")!
+        XCTAssertEqual(rx.value, -22.6, accuracy: 0.001)
+        XCTAssertEqual(rx.warnLow!, -27.9, accuracy: 0.001)
+        XCTAssertEqual(rx.status, .ok)
+        XCTAssertEqual(rx.valueText, "−22.6 dBm")
+        XCTAssertEqual(rx.marginText, "5.3 dB above the low limit")
+        XCTAssertEqual(f.metric("Temperature")?.valueText, "42 °C")
+        XCTAssertEqual(f.summary, "OK · Rx −22.6 dBm · 42 °C")
+        // Past the warning threshold -> warning; module flag -> alarm
+        var weak = rx; weak.value = -28.5
+        XCTAssertEqual(weak.status, .warning)
+        weak.alarmLowFlag = true
+        XCTAssertEqual(weak.status, .alarm)
+    }
+
     func testPONState() {
         var s = BroadbandSummary(sections: [StatSection(title: "GPON Status", rows: [StatRow(key: "PON Link Status", value: "OPERATION (O5)")])])
         XCTAssertEqual(s.ponFriendly, "Connected (O5)")

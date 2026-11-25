@@ -40,6 +40,10 @@ struct GatewayDetailView: View {
 
             SpeedTestSection()
 
+            if let f = model.fiber {
+                FiberOpticsCard(fiber: f)
+            }
+
             DetailCard(title: "Broadband", systemImage: "network") {
                 DetailRow(key: "WAN IPv4", value: b?.wanIPv4)
                 DetailRow(key: "ISP gateway", value: b?.gatewayIPv4)
@@ -615,6 +619,57 @@ private struct DNSServerRow: View {
                 .padding(.bottom, 10)
             }
             if !last { Divider() }
+        }
+    }
+}
+
+/// Optical module readings with a status for each (cgi-bin/fiberstat.ha).
+struct FiberOpticsCard: View {
+    var fiber: FiberStatus
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("Fiber Optics", systemImage: "light.beacon.max")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                HealthPill(health: fiber.status.health, text: fiber.status.label)
+            }
+            VStack(spacing: 0) {
+                ForEach(Array(fiber.metrics.enumerated()), id: \.element.id) { i, m in
+                    VStack(spacing: 0) {
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(m.displayName).font(.callout)
+                                if let range = m.rangeText {
+                                    Text([range, m.marginText].compactMap { $0 }.joined(separator: " · "))
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            // Values and status never wrap; the caption on the left does.
+                            Text(m.valueText).font(.callout.monospacedDigit().weight(.semibold))
+                                .lineLimit(1).fixedSize()
+                                .copyable(m.valueText, label: m.displayName)
+                            HealthPill(health: m.status.health, text: m.status.label).fixedSize()
+                        }
+                        .padding(.vertical, 9)
+                        if i < fiber.metrics.count - 1 { Divider() }
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            DetailCard(title: "Optical Module", systemImage: "cable.connector") {
+                DetailRow(key: "Link", value: fiber.value("Link State"), mono: false,
+                          tint: fiber.linkUp == false ? .red : nil)
+                DetailRow(key: "Optical WAN", value: fiber.value("Optical WAN Operational Status"), mono: false)
+                DetailRow(key: "Wavelength", value: fiber.wavelength)
+                DetailRow(key: "Module", value: fiber.module, mono: false)
+                DetailRow(key: "Serial", value: fiber.value("Vendor SN"), last: true)
+            }
+            Text("Readings and limits come from the fiber module itself. Receive power is the most useful: a drop toward the low limit usually means a dirty or bent fiber.")
+                .font(.caption).foregroundStyle(.secondary)
         }
     }
 }

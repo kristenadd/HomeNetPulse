@@ -36,6 +36,7 @@
 		F1098C6A3A61639ECFB2A54C /* Copyable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597FB1E91702595566112483 /* Copyable.swift */; };
 		F3201B7AE31F9EB8519F3936 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */; };
 		F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830FC37B927B98E42F95DCFB /* Keychain.swift */; };
+		FA45A1B3DDB14A54C60AF1CE /* FiberStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B8D820BC38CAB544CEE469 /* FiberStatus.swift */; };
 		FA4BF0A757947652747E5C96 /* BaseStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8EF5CD90A38C92CD2DEE3F /* BaseStation.swift */; };
 /* End PBXBuildFile section */
 
@@ -82,6 +83,7 @@
 		D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViews.swift; sourceTree = "<group>"; };
 		E3D446C4946455D14D71B9FC /* HomeNetPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeNetPulseApp.swift; sourceTree = "<group>"; };
 		E71653689E511CB60186F676 /* LANScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANScanner.swift; sourceTree = "<group>"; };
+		E7B8D820BC38CAB544CEE469 /* FiberStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiberStatus.swift; sourceTree = "<group>"; };
 		EBE2B88944DF6992CF3F9FC8 /* HomeNetPulseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HomeNetPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBFCEC33E34F57F8981AB4EF /* WiFiStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiStatus.swift; sourceTree = "<group>"; };
 		EDC8A8FAEF10BAF80669BC6D /* HomeNetPulse.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HomeNetPulse.entitlements; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 				052681950A63201C88ADCCE8 /* AirPortBrowser.swift */,
 				B9F923C74ED423387000E326 /* DefaultGateway.swift */,
 				A6F9B4A55AC4A3193ED34876 /* DNSCheck.swift */,
+				E7B8D820BC38CAB544CEE469 /* FiberStatus.swift */,
 				F102479F50B7247FB22764AA /* HTML.swift */,
 				830FC37B927B98E42F95DCFB /* Keychain.swift */,
 				E71653689E511CB60186F676 /* LANScanner.swift */,
@@ -310,6 +313,7 @@
 				2EDE804A61ED078215706B18 /* DetailComponents.swift in Sources */,
 				8062FC07F869273FEB02AC73 /* DetailViews.swift in Sources */,
 				8798366BD9C3941025221D1B /* EqualColumns.swift in Sources */,
+				FA45A1B3DDB14A54C60AF1CE /* FiberStatus.swift in Sources */,
 				C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */,
 				BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */,
 				F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */,

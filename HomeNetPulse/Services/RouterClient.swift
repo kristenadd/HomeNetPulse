@@ -131,6 +131,11 @@ actor RouterClient {
         return html
     }
 
+    /// Optical module readings from cgi-bin/fiberstat.ha (temperature, Tx/Rx power, thresholds).
+    func fiberStatus() async throws -> FiberStatus {
+        FiberStatusParser.parse(try await authenticatedPage("cgi-bin/fiberstat.ha"))
+    }
+
     /// Speed test history from cgi-bin/speed.ha (newest first).
     func speedTestHistory() async throws -> [SpeedTestEntry] {
         SpeedTestParser.parse(try await authenticatedPage("cgi-bin/speed.ha"))

@@ -35,6 +35,8 @@ final class DashboardModel {
     var routerLatencyMs: Double?
     var routerPing: PingResult?
     var broadband: BroadbandSummary?
+    /// Optical module health (cgi-bin/fiberstat.ha).
+    var fiber: FiberStatus?
     var routerError: String?
     var devicePings: [DevicePing] = []
     var isRefreshing = false
@@ -139,7 +141,9 @@ final class DashboardModel {
         guard let reachable = routerReachable else { return .unknown }
         guard reachable else { return routerPing?.received ?? 0 > 0 ? .degraded : .down }
         if let state = broadband?.lineState?.lowercased(), state.contains("down") { return .down }
-        return max(routerPing?.health ?? .good, routerError == nil ? .good : .degraded)
+        // Optics outside their warning/alarm limits need attention even while the link is up.
+        let optics: Health = (fiber?.status ?? .ok) == .ok ? .good : .degraded
+        return max(routerPing?.health ?? .good, routerError == nil ? .good : .degraded, optics)
     }
 
     /// The base station acting as the main router: user choice, else the default gateway, else best guess.
@@ -389,6 +393,9 @@ final class DashboardModel {
             routerError = error.localizedDescription
         }
         routerPing = await icmp
+        if routerReachable == true, let f = try? await client.fiberStatus(), !f.metrics.isEmpty {
+            fiber = f
+        }
         // Speed history needs a login, so only re-read it occasionally.
         if routerReachable == true, !settings.routerPassword.isEmpty,
            lastSpeedHistoryFetch.map({ Date().timeIntervalSince($0) > 15 * 60 }) ?? true {

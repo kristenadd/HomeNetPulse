@@ -185,6 +185,7 @@ struct DashboardView: View {
                     .init(label: "ISP Gateway", value: b?.gatewayIPv4),
                     .init(label: "ISP DNS", value: b?.primaryDNS),
                     .init(label: "Web UI", value: model.routerLatencyMs.map { String(format: "%.0f ms", $0) }),
+                    .init(label: "Optics", value: model.fiber?.summary, tint: model.fiber.flatMap { Self.opticsTint($0.status) }),
                 ])
                 if let err = model.routerError {
                     Label(err, systemImage: "exclamationmark.triangle.fill")
@@ -256,6 +257,10 @@ struct DashboardView: View {
         case .unknown: "—"
         }
         return .init(label: "DNS", value: text, tint: r.health == .good ? nil : r.health.color)
+    }
+
+    static func opticsTint(_ s: OpticalMetric.Status) -> Color? {
+        switch s { case .ok: nil; case .warning: .orange; case .alarm: .red }
     }
 
     /// "↓1296 ↑1290 Mbps"
