@@ -28,6 +28,8 @@ targets:
       path: HomeNetPulse/Info.plist
       properties:
         CFBundleDisplayName: HomeNet Pulse
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
         UILaunchScreen: {}

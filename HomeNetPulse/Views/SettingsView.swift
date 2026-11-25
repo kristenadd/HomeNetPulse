@@ -167,6 +167,14 @@ struct SettingsView: View {
             } footer: {
                 Text("HomeNet Pulse verifies it's on your network by matching these MAC addresses.")
             }
+
+            Section {
+                LabeledContent("Version") {
+                    Text(Self.versionString).monospacedDigit().copyable(Self.versionString, label: "Version")
+                }
+            } footer: {
+                Text("HomeNet Pulse").frame(maxWidth: .infinity)
+            }
         }
         .formStyle(.grouped)
         .navigationTitle("Settings")
@@ -199,6 +207,14 @@ struct SettingsView: View {
             ? (true, "Saved to Keychain")
             : (false, "Keychain error \(status): \(SecCopyErrorMessageString(status, nil) as String? ?? "unknown")")
         Task { await model.refreshRouter() }
+    }
+
+    /// "1.0.3 (42)" from the bundle: CI stamps the release version and the Actions run number.
+    static var versionString: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "\(version) (\(build))"
     }
 
     private func addHostname() {

@@ -193,8 +193,8 @@ final class DashboardModel {
         lanProgress = 0
         lanInterface = iface
         defer { lanScanning = false; lanProgress = 1 }
-        let devices = await LANScanner.scan(iface) { p in
-            Task { @MainActor [weak self] in self?.lanProgress = p }
+        let devices = await LANScanner.scan(iface) { [weak self] p in
+            Task { @MainActor in self?.lanProgress = p }
         }
         lanDevices = devices
         lastLANScan = Date()

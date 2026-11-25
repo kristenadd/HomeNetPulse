@@ -43,6 +43,21 @@ This builds a Release copy, installs it as `/Applications/HomeNet Pulse.app` and
 
 Builds a Release copy and installs it on every paired iPhone and iPad that's available, or only on the device IDs you pass. Add `--launch` to also open it on each device.
 
+## Releasing
+
+Every push to `main` runs `.github/workflows/release.yml` on one macOS runner. It:
+
+1. works out the next version from the `vX.Y.Z` tags (`scripts/next-version.sh`): patch + 1, or `#minor` / `#major` in a commit message. Raise `MARKETING_VERSION` in `project.yml` to jump ahead. The build number is the Actions run number.
+2. registers Firebase testers' iPhones and iPads with Apple (fastlane `sync_devices`).
+3. builds the ad-hoc iPhone/iPad `.ipa` (`scripts/release-ios.sh`) and the Developer ID–signed, notarized and stapled Mac DMG (`scripts/release-mac.sh`).
+4. tags `vX.Y.Z`, publishes a GitHub release with both files and a SHA-256 list, and uploads the `.ipa` to Firebase App Distribution (project `homenet-pulse`).
+
+Put `[skip release]` in a commit message to push without releasing. Changes to Markdown files and the local-only scripts don't trigger a release. You can also run it by hand from **Actions ▸ Release ▸ Run workflow** and pick the version part to bump and the Firebase groups to invite. There's no in-app auto-update; install new versions from the release page or Firebase.
+
+The signing secrets come from `~/Projects/SigningSecrets` (`./signing-secrets push kristenadd/HomeNetPulse`). To invite Firebase testers automatically on every release, add a tester group in the [Firebase console](https://console.firebase.google.com/project/homenet-pulse/appdistribution) and set the repository variable `FIREBASE_GROUPS` to its alias.
+
+Settings shows the installed version and build at the bottom.
+
 ## Notes
 
 - Pings use an unprivileged ICMP datagram socket, so they need no root and no helper tool. On macOS the App Sandbox needs both `network.client` and `network.server` entitlements to receive ICMP replies.
