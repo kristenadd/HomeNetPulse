@@ -14,6 +14,8 @@
 		41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */; };
 		46431D160D9DC12761601C42 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241A99A62E03940B089301F /* DashboardView.swift */; };
 		48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DCAC4241147EAFC2417ED3 /* Pinger.swift */; };
+		628984D5DA86A7058DD4EB45 /* manuf.tsv in Resources */ = {isa = PBXBuildFile; fileRef = 051435D6AE8C7F219F76759E /* manuf.tsv */; };
+		64229B7AB4CEF8BE9AAF6CEE /* Manufacturers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA768B65AC3CBFEAAADDD45 /* Manufacturers.swift */; };
 		6B8B8134F1DDDC87BE04DCD5 /* LocationAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 354FB903E0966AD129675B24 /* LocationAccess.swift */; };
 		706F8275AC64ED79D095D119 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D64382380E1319474F1AB3A /* Assets.xcassets */; };
 		7873E85004F93DF21C809BBC /* LANScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71653689E511CB60186F676 /* LANScanner.swift */; };
@@ -46,6 +48,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		051435D6AE8C7F219F76759E /* manuf.tsv */ = {isa = PBXFileReference; path = manuf.tsv; sourceTree = "<group>"; };
 		052681950A63201C88ADCCE8 /* AirPortBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPortBrowser.swift; sourceTree = "<group>"; };
 		0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopologyComponents.swift; sourceTree = "<group>"; };
 		1115846DC2AD50CFB7B28DCB /* DashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardModel.swift; sourceTree = "<group>"; };
@@ -61,6 +64,7 @@
 		7187496DA1D907A9A5265FAA /* HomeNetPulse-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "HomeNetPulse-iOS.entitlements"; sourceTree = "<group>"; };
 		78FCFD6DFB79CF0B71880FA7 /* SpeedTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeedTest.swift; sourceTree = "<group>"; };
 		830FC37B927B98E42F95DCFB /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+		8CA768B65AC3CBFEAAADDD45 /* Manufacturers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Manufacturers.swift; sourceTree = "<group>"; };
 		97EAC894F8A3C2E35BBDDBD5 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		9D674105107F5F173D5257FF /* ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParserTests.swift; sourceTree = "<group>"; };
 		A0244B8DE6C3E214452EBBF7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -106,6 +110,7 @@
 				830FC37B927B98E42F95DCFB /* Keychain.swift */,
 				E71653689E511CB60186F676 /* LANScanner.swift */,
 				354FB903E0966AD129675B24 /* LocationAccess.swift */,
+				8CA768B65AC3CBFEAAADDD45 /* Manufacturers.swift */,
 				D2DCAC4241147EAFC2417ED3 /* Pinger.swift */,
 				67845DEF76D4E358F881D2DD /* RouterClient.swift */,
 				78FCFD6DFB79CF0B71880FA7 /* SpeedTest.swift */,
@@ -124,6 +129,7 @@
 				1E7EADE7387AC70CE245B9BC /* Info.plist */,
 				321C6154626AF63CED90DACB /* App */,
 				4F574748E9029E9522B091BE /* Models */,
+				E32396630B516CDCD04CFA6D /* Resources */,
 				0C69D6A5DC78F45D78B0F89A /* Services */,
 				B323F6C327A43B4AD636AE58 /* Views */,
 			);
@@ -171,6 +177,14 @@
 				0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		E32396630B516CDCD04CFA6D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				051435D6AE8C7F219F76759E /* manuf.tsv */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,6 +271,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				706F8275AC64ED79D095D119 /* Assets.xcassets in Resources */,
+				628984D5DA86A7058DD4EB45 /* manuf.tsv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,6 +306,7 @@
 				7873E85004F93DF21C809BBC /* LANScanner.swift in Sources */,
 				2CB12BEE41286A9701DE1CD8 /* LaunchAtLoginToggle.swift in Sources */,
 				6B8B8134F1DDDC87BE04DCD5 /* LocationAccess.swift in Sources */,
+				64229B7AB4CEF8BE9AAF6CEE /* Manufacturers.swift in Sources */,
 				A4CD96AB40F5648AF3AAD567 /* MenuBarView.swift in Sources */,
 				48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */,
 				EE090D3DFBA68BEC1BFE30C4 /* RouterClient.swift in Sources */,

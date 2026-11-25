@@ -19,6 +19,9 @@ struct LANDevice: Identifiable, Sendable, Equatable {
         return b & 0x02 != 0
     }
 
+    /// From the MAC prefix; nil for private addresses.
+    var manufacturer: String? { Manufacturers.name(for: mac) }
+
     var displayName: String { hostName ?? ip }
 
     var sortKey: UInt32 {
@@ -93,6 +96,7 @@ enum LANScanner {
 
     /// Ping every address (which also fills the ARP cache), then merge ARP entries and look up names.
     static func scan(_ iface: LocalInterface, progress: (@Sendable (Double) -> Void)? = nil) async -> [LANDevice] {
+        Manufacturers.preload()
         var found: [String: LANDevice] = [:]
         let hosts = iface.hosts
         let batch = 48

@@ -370,7 +370,7 @@ struct DevicesDetailView: View {
         var list = model.lanDevices
         if !search.isEmpty {
             list = list.filter { d in
-                [model.displayName(of: d), d.ip, d.mac ?? "", d.services.joined(separator: " ")]
+                [model.displayName(of: d), d.ip, d.mac ?? "", d.manufacturer ?? "", d.services.joined(separator: " ")]
                     .contains { $0.localizedCaseInsensitiveContains(search) }
             }
         }
@@ -390,7 +390,7 @@ struct DevicesDetailView: View {
                          onClose: onClose)
 
             HStack(spacing: 10) {
-                TextField("Search name, IP, MAC or type", text: $search)
+                TextField("Search name, IP, MAC, maker or type", text: $search)
                     .textFieldStyle(.roundedBorder)
                 Picker("Sort", selection: $sort) {
                     ForEach(Sort.allCases, id: \.self) { Text($0.rawValue).tag($0) }
@@ -465,12 +465,12 @@ private struct DeviceRow: View {
             HStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.body)
-                    .foregroundStyle(device.hostName == nil && role == nil ? Color.secondary : .accentColor)
+                    .foregroundStyle(device.hostName == nil && role == nil && device.manufacturer == nil ? Color.secondary : .accentColor)
                     .frame(width: 26)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(name).font(.callout.weight(.medium)).lineLimit(1)
-                            .foregroundStyle(device.hostName == nil && role == nil ? Color.secondary : .primary)
+                            .foregroundStyle(device.hostName == nil && role == nil && device.manufacturer == nil ? Color.secondary : .primary)
                         if let roleText {
                             Text(roleText).font(.caption2.weight(.semibold))
                                 .padding(.horizontal, 6).padding(.vertical, 1)
@@ -483,6 +483,11 @@ private struct DeviceRow: View {
                     if let mac = device.mac {
                         HStack(spacing: 6) {
                             Text(mac).font(.caption2.monospaced()).foregroundStyle(.secondary)
+                                .fixedSize()
+                            if let maker = device.manufacturer {
+                                Text(maker).font(.caption2.weight(.medium)).foregroundStyle(.secondary)
+                                    .lineLimit(1).truncationMode(.tail)
+                            }
                             if device.isPrivateMAC {
                                 Text("Private address").font(.caption2)
                                     .foregroundStyle(.secondary)
@@ -491,11 +496,13 @@ private struct DeviceRow: View {
                         }
                     }
                 }
+                .layoutPriority(1)   // let names and makers use the free space before the spacer
                 Spacer(minLength: 8)
                 if let ms = device.latencyMs {
                     Text(ms < 10 ? String(format: "%.1f ms", ms) : String(format: "%.0f ms", ms))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(ms > 100 ? Color.orange : .secondary)
+                        .fixedSize()
                 } else {
                     Text("no ping").font(.caption).foregroundStyle(.tertiary)
                 }
@@ -506,6 +513,7 @@ private struct DeviceRow: View {
                 .init(label: "Name", value: device.hostName),
                 .init(label: "IP Address", value: device.ip),
                 .init(label: "MAC Address", value: device.mac),
+                .init(label: "Manufacturer", value: device.manufacturer),
                 .init(label: "Services", value: device.services.joined(separator: ", ").nilIfEmpty),
             ])
             if !last { Divider() }

@@ -98,6 +98,14 @@ final class ParserTests: XCTestCase {
         XCTAssertFalse(LANDevice(ip: "1", mac: "88:1f:a1:28:58:6b").isPrivateMAC)
     }
 
+    func testManufacturerLookup() {
+        XCTAssertEqual(Manufacturers.name(for: "88:1f:a1:28:58:6b"), "Apple")
+        XCTAssertEqual(Manufacturers.name(for: "e8:9f:80:37:78:90"), "Belkin International")
+        XCTAssertEqual(Manufacturers.name(for: "00:1b:c5:00:00:05"), "Converging Systems")   // /36 block
+        XCTAssertNil(Manufacturers.name(for: "da:a1:19:00:00:01"))                           // private address
+        XCTAssertNil(Manufacturers.name(for: nil))
+    }
+
     func testPONState() {
         var s = BroadbandSummary(sections: [StatSection(title: "GPON Status", rows: [StatRow(key: "PON Link Status", value: "OPERATION (O5)")])])
         XCTAssertEqual(s.ponFriendly, "Connected (O5)")

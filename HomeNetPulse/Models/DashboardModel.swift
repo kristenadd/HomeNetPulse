@@ -197,7 +197,7 @@ final class DashboardModel {
             #endif
         case .mainRouter?: return mainRouter?.name ?? "Router"
         case .baseStation(let name)?: return name
-        case nil: return "Unknown device"
+        case nil: return device.manufacturer.map { "\($0) device" } ?? "Unknown device"
         }
     }
 
