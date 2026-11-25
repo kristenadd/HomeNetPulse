@@ -1,7 +1,22 @@
 import SwiftUI
 
+#if os(macOS)
+import AppKit
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// SwiftUI quits a single-`Window` app when that window closes; keep running while the
+    /// menu bar status icon is enabled so monitoring continues in the background.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        !(UserDefaults.standard.object(forKey: "showMenuBarIcon") as? Bool ?? true)
+    }
+}
+#endif
+
 @main
 struct HomeNetPulseApp: App {
+    #if os(macOS)
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #endif
     @State private var settings: AppSettings
     @State private var model: DashboardModel
 
