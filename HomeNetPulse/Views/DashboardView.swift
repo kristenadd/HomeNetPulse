@@ -72,6 +72,77 @@ struct DashboardView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
+            Group {
+                if model.onLocalNetwork == false {
+                    ConnectToWiFiView()
+                } else {
+                    dashboardScroll
+                }
+            }
+            .background(Color.platformGroupedBackground)
+            .navigationTitle(AppInfo.displayName)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .navigationDestination(for: Route.self) { destination($0, inInspector: false) }
+            #if os(macOS)
+            .inspector(isPresented: inspectorShown) {
+                Group {
+                    if let inspected { destination(inspected, inInspector: true) }
+                }
+                .inspectorColumnWidth(min: 340, ideal: 400, max: 520)
+            }
+            #endif
+            .refreshable { await model.refresh() }
+            .toolbar { toolbarContent }
+            .sheet(isPresented: $showSettings) { settingsSheet }
+        }
+        .task { model.start() }
+        .onAppear { showRequestedRoute() }
+        .onChange(of: model.requestedRoute) { showRequestedRoute() }
+        #if os(iOS)
+        .onChange(of: horizontalSizeClass) { _, size in
+            // Going compact (Slide Over, split view) with details open: push them instead.
+            if size == .compact, let r = inspected {
+                inspected = nil
+                path.append(r)
+            }
+        }
+        #endif
+    }
+
+    // MARK: Layout
+
+    /// The dashboard; on iPad (regular width) with a side panel for details.
+    @ViewBuilder private var dashboardScroll: some View {
+        #if os(iOS)
+        // iPad uses our own side panel instead of .inspector: the system inspector sometimes kept its
+        // width after rotating landscape -> portrait, leaving an empty strip until it was toggled.
+        GeometryReader { geo in
+            // Explicit widths that always add up to the screen, so neither column can push the other
+            // off-screen (in portrait the dashboard's content otherwise claimed a little extra).
+            let showPanel = usesInspector && inspected != nil
+            let panelWidth = min(420, max(300, (geo.size.width * 0.42).rounded()))
+            HStack(spacing: 0) {
+                dashboardList
+                    .frame(width: showPanel ? geo.size.width - panelWidth - 1 : geo.size.width)
+                if showPanel, let inspected {
+                    Divider().ignoresSafeArea()
+                    destination(inspected, inInspector: true)
+                        .environment(\.inSidePanel, true)
+                        .frame(width: panelWidth)
+                        .background(Color.platformGroupedBackground)
+                        .transition(.move(edge: .trailing))
+                }
+            }
+            .animation(.snappy, value: inspected)
+        }
+        #else
+        dashboardList
+        #endif
+    }
+
+    private var dashboardList: some View {
             ScrollView {
                 VStack(spacing: 0) {
                     VerificationBanner()
@@ -95,22 +166,9 @@ struct DashboardView: View {
                 .frame(maxWidth: 760)
                 .frame(maxWidth: .infinity)
             }
-            .background(Color.platformGroupedBackground)
-            .navigationTitle(AppInfo.displayName)
-            #if os(iOS)
-            // A collapsing large title flips back and forth near the top while the live data
-            // re-renders, jolting the content up and down. Keep the compact title.
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .navigationDestination(for: Route.self) { destination($0, inInspector: false) }
-            .inspector(isPresented: inspectorShown) {
-                Group {
-                    if let inspected { destination(inspected, inInspector: true) }
-                }
-                .inspectorColumnWidth(min: 340, ideal: 400, max: 520)
-            }
-            .refreshable { await model.refresh() }
-            .toolbar {
+    }
+
+    @ToolbarContentBuilder private var toolbarContent: some ToolbarContent {
                 ToolbarItem(placement: .primaryAction) {
                     Button { Task { await model.refresh() } } label: {
                         if model.isRefreshing { ProgressView().controlSize(.small) }
@@ -123,7 +181,8 @@ struct DashboardView: View {
                     Button { showSettings = true } label: { Label("Settings", systemImage: "gearshape") }
                 }
             }
-            .sheet(isPresented: $showSettings) {
+
+    private var settingsSheet: some View {
                 NavigationStack {
                     SettingsView()
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") {
@@ -137,11 +196,6 @@ struct DashboardView: View {
                 .frame(minWidth: 520, minHeight: 620)
                 #endif
             }
-        }
-        .task { model.start() }
-        .onAppear { showRequestedRoute() }
-        .onChange(of: model.requestedRoute) { showRequestedRoute() }
-    }
 
     private var ispHopLabel: String? {
         guard let gw = model.broadband?.gatewayIPv4 else { return nil }

@@ -22,6 +22,9 @@ struct DevicePing: Identifiable, Equatable {
 final class DashboardModel {
     let settings: AppSettings
     private let browser = AirPortBrowser()
+    private let pathMonitor = LocalNetworkMonitor()
+    /// nil until known; false on cellular / no network ("Connect to Wi-Fi").
+    var onLocalNetwork: Bool?
 
     var baseStations: [BaseStation] = []
     var discoveryError: String?
@@ -79,6 +82,17 @@ final class DashboardModel {
     /// Idempotent: the window and the menu bar extra both call this.
     func start() {
         guard autoRefreshTask == nil else { return }
+        pathMonitor.onChange = { [weak self] local in
+            guard let self else { return }
+            let wasOff = self.onLocalNetwork == false
+            self.onLocalNetwork = local
+            if local && wasOff {
+                // Back on Wi-Fi: start fresh rather than showing the old network's state.
+                self.lastLANScan = nil
+                Task { await self.refresh() }
+            }
+        }
+        pathMonitor.start()
         browser.start()
         if settings.useLocationForWiFi && !LocationAccess.shared.isAuthorized && !LocationAccess.shared.isDenied {
             LocationAccess.shared.request()
@@ -175,6 +189,7 @@ final class DashboardModel {
 
     /// One-line explanation of the worst problem, for the menu bar tooltip/header.
     var overallSummary: String {
+        if onLocalNetwork == false { return "Connect to Wi-Fi to check your network" }
         if pingHealth == .down { return "Internet is unreachable" }
         if dnsHealth == .down { return "DNS isn't resolving names" }
         if gatewayHealth == .down { return "Fiber gateway is not responding" }
@@ -192,7 +207,7 @@ final class DashboardModel {
     }
 
     func scanLAN() async {
-        guard !lanScanning, let iface = LANScanner.localInterface() else { return }
+        guard !lanScanning, onLocalNetwork != false, let iface = LANScanner.localInterface() else { return }
         lanScanning = true
         lanProgress = 0
         lanInterface = iface
@@ -230,6 +245,7 @@ final class DashboardModel {
     }
 
     func refreshWiFi() async {
+        guard onLocalNetwork != false else { wifi = nil; connectedStationID = nil; return }
         let status = await WiFiReader.current()
         wifi = status
         if let status, let (station, how) = ConnectionMatcher.match(status, in: baseStations) {
@@ -290,7 +306,7 @@ final class DashboardModel {
     }
 
     func refresh() async {
-        guard !isRefreshing else { return }
+        guard !isRefreshing, onLocalNetwork != false else { return }
         isRefreshing = true
         defer { isRefreshing = false; lastRefresh = Date() }
         defaultGateway = DefaultGateway.ipv4()

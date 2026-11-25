@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 /// Big header at the top of a detail page.
 struct DetailHeader: View {
@@ -227,22 +230,58 @@ struct CollapsibleCard<Content: View>: View {
     }
 }
 
+extension EnvironmentValues {
+    /// True for detail pages shown in the iPad side panel (they mustn't set the window's title).
+    @Entry var inSidePanel = false
+}
+
 /// Scroll container shared by detail pages: readable width on iPhone pushes, natural width in inspectors.
 struct DetailPage<Content: View>: View {
     var title: String
     @ViewBuilder var content: Content
+    @Environment(\.inSidePanel) private var inSidePanel
+
     var body: some View {
-        ScrollView {
+        let page = ScrollView {
             VStack(alignment: .leading, spacing: 22) { content }
                 .padding(18)
                 .frame(maxWidth: 560, alignment: .leading)
                 .frame(maxWidth: .infinity)
         }
         .defaultScrollAnchor(.top)
-        .navigationTitle(title)
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
         .background(Color.platformGroupedBackground)
         #endif
+        if inSidePanel {
+            page
+        } else {
+            page
+                .navigationTitle(title)
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+        }
+    }
+}
+
+/// Shown instead of the dashboard when the device isn't on Wi-Fi or Ethernet (e.g. iPad on LTE).
+struct ConnectToWiFiView: View {
+    var body: some View {
+        ContentUnavailableView {
+            Label("Connect to Wi-Fi", systemImage: "wifi.slash")
+        } description: {
+            #if os(iOS)
+            Text("HomeNet Pulse checks your home network: the fiber gateway, AirPort base stations and devices. Join your Wi-Fi network to see their status. It'll update as soon as you're connected.")
+            #else
+            Text("HomeNet Pulse checks your home network: the fiber gateway, AirPort base stations and devices. Connect this Mac to your Wi-Fi or Ethernet network to see their status.")
+            #endif
+        } actions: {
+            #if os(iOS)
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            }
+            .buttonStyle(.bordered)
+            #endif
+        }
     }
 }

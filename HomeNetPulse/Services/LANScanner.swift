@@ -81,13 +81,16 @@ enum LANScanner {
                 }
             }
         }
-        guard let c = candidates.first(where: { $0.name == "en0" }) ?? candidates.first(where: { $0.name.hasPrefix("en") }) ?? candidates.first
+        // Only Wi-Fi / Ethernet (en*). Never cellular (pdp_ip*) or VPN (utun*, ipsec*) interfaces:
+        // they aren't the home network, and cellular's single-address netmask has no hosts to sweep.
+        guard let c = candidates.first(where: { $0.name == "en0" }) ?? candidates.first(where: { $0.name.hasPrefix("en") })
         else { return nil }
 
         var mask = c.mask
         if mask.nonzeroBitCount < 22 { mask = 0xFFFF_FC00 }   // don't sweep huge networks
         let net = c.ip & mask
         let broadcast = net | ~mask
+        guard broadcast > net &+ 1 else { return nil }          // /31 and /32 have no host range
         let hosts = (net + 1 ..< broadcast).map { Pinger.string(from: in_addr(s_addr: $0.bigEndian)) }
         return LocalInterface(name: c.name, ip: Pinger.string(from: in_addr(s_addr: c.ip.bigEndian)),
                               netmask: Pinger.string(from: in_addr(s_addr: c.mask.bigEndian)),

@@ -22,6 +22,7 @@
 		7873E85004F93DF21C809BBC /* LANScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71653689E511CB60186F676 /* LANScanner.swift */; };
 		8062FC07F869273FEB02AC73 /* DetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */; };
 		8798366BD9C3941025221D1B /* EqualColumns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 622A20B0AC4ABA6CF787457C /* EqualColumns.swift */; };
+		93637A2803EAE5FD38140801 /* LocalNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372893D327B1BAAC68BE580D /* LocalNetworkMonitor.swift */; };
 		9537348C09EEA2D41A35348F /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC525BFC3112189279810E6 /* AppSettings.swift */; };
 		998A300A4D3240EA64E8EA96 /* UnicastMDNS.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE7E87F79B8FB5F3E8FDA9B /* UnicastMDNS.swift */; };
 		9A3B3C0B0E5E3DBDF19559D5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97EAC894F8A3C2E35BBDDBD5 /* Components.swift */; };
@@ -59,6 +60,7 @@
 		264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginToggle.swift; sourceTree = "<group>"; };
 		2D64382380E1319474F1AB3A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		354FB903E0966AD129675B24 /* LocationAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccess.swift; sourceTree = "<group>"; };
+		372893D327B1BAAC68BE580D /* LocalNetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNetworkMonitor.swift; sourceTree = "<group>"; };
 		37CE35D4B343C37336D5417A /* DetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailComponents.swift; sourceTree = "<group>"; };
 		4BC525BFC3112189279810E6 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		54CDA94A0110CC04B00062BF /* HomeNetPulse-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HomeNetPulse-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 				F102479F50B7247FB22764AA /* HTML.swift */,
 				830FC37B927B98E42F95DCFB /* Keychain.swift */,
 				E71653689E511CB60186F676 /* LANScanner.swift */,
+				372893D327B1BAAC68BE580D /* LocalNetworkMonitor.swift */,
 				354FB903E0966AD129675B24 /* LocationAccess.swift */,
 				8CA768B65AC3CBFEAAADDD45 /* Manufacturers.swift */,
 				D2DCAC4241147EAFC2417ED3 /* Pinger.swift */,
@@ -319,6 +322,7 @@
 				F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */,
 				7873E85004F93DF21C809BBC /* LANScanner.swift in Sources */,
 				2CB12BEE41286A9701DE1CD8 /* LaunchAtLoginToggle.swift in Sources */,
+				93637A2803EAE5FD38140801 /* LocalNetworkMonitor.swift in Sources */,
 				6B8B8134F1DDDC87BE04DCD5 /* LocationAccess.swift in Sources */,
 				64229B7AB4CEF8BE9AAF6CEE /* Manufacturers.swift in Sources */,
 				A4CD96AB40F5648AF3AAD567 /* MenuBarView.swift in Sources */,

@@ -54,7 +54,12 @@ struct MenuBarStatusView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             header
-            chain
+            if model.onLocalNetwork == false {
+                Label("Not on Wi-Fi or Ethernet, so the home network checks are paused.", systemImage: "wifi.slash")
+                    .font(.callout).foregroundStyle(.secondary)
+            } else {
+                chain
+            }
             if model.internetDown {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("Internet is unreachable from this Mac.", systemImage: "wifi.exclamationmark")
