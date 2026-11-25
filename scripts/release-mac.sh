@@ -44,7 +44,8 @@ if [ "$SKIP_NOTARIZATION" != 1 ]; then
 fi
 echo "HomeNet Pulse $VERSION ($BUILD_NUMBER), signing as \"$SIGNING_IDENTITY\""
 
-rm -rf "$OUT"
+# Only clear this script's own output: build/release also holds the iOS .ipa from release-ios.sh.
+rm -rf "$ARCHIVE" "$OUT/$DISPLAY_NAME.app" "$OUT/dmg" "$DMG" "$OUT/$APP_NAME.zip" "$OUT/notary.json"
 mkdir -p "$OUT"
 
 step "Archiving"
