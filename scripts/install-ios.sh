@@ -1,7 +1,10 @@
 #!/bin/sh
 # Build a Release copy of HomeNet Pulse and install it on every paired, available iPhone/iPad.
-# Usage: scripts/install-ios.sh [device-udid ...]
+# Usage: scripts/install-ios.sh [--launch] [device-udid ...]
+#   --launch  also open the app on each device after installing (off by default)
 set -eu
+launch=0
+if [ "${1:-}" = "--launch" ]; then launch=1; shift; fi
 cd "$(dirname "$0")/.."
 xcodegen generate -q
 xcodebuild -project HomeNetPulse.xcodeproj -scheme HomeNetPulse -configuration Release \
@@ -19,5 +22,7 @@ fi
 for d in $devices; do
   echo "Installing on $d…"
   xcrun devicectl device install app --device "$d" "$APP"
-  xcrun devicectl device process launch --device "$d" com.kristenadd.HomeNetPulse || true
+  if [ "$launch" = 1 ]; then
+    xcrun devicectl device process launch --device "$d" com.kristenadd.HomeNetPulse || true
+  fi
 done

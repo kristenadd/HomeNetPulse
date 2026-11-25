@@ -41,7 +41,7 @@ This builds a Release copy, installs it as `/Applications/HomeNet Pulse.app` and
 ./scripts/install-ios.sh
 ```
 
-Builds a Release copy and installs and launches it on every paired iPhone and iPad that's available, or only on the device IDs you pass.
+Builds a Release copy and installs it on every paired iPhone and iPad that's available, or only on the device IDs you pass. Add `--launch` to also open it on each device.
 
 ## Notes
 

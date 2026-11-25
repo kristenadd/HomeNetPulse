@@ -33,7 +33,9 @@ actor RouterClient {
         self.password = password
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 60    // the gateway is slow: home.ha alone takes ~14 s
-        config.timeoutIntervalForResource = 120
+        config.timeoutIntervalForResource = 180
+        config.waitsForConnectivity = false
+        config.httpMaximumConnectionsPerHost = 2
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
         session = URLSession(configuration: config)
@@ -67,6 +69,9 @@ actor RouterClient {
             return String(decoding: data, as: UTF8.self)
         } catch let e as RouterError {
             throw e
+        } catch let e as URLError {
+            // Include the code so intermittent failures (timeouts vs refused vs offline) can be told apart.
+            throw RouterError.unreachable("\(e.localizedDescription) [URLError \(e.code.rawValue)]")
         } catch {
             throw RouterError.unreachable(error.localizedDescription)
         }

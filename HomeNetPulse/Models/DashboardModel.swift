@@ -273,9 +273,16 @@ final class DashboardModel {
 
     // MARK: - Refresh
 
+    /// One client (one URLSession + login cookie) reused across refreshes; rebuilt when the
+    /// URL or access code changes. Creating a fresh session every minute meant a new login each time.
+    private var cachedClient: (key: String, client: RouterClient)?
     private var routerClient: RouterClient? {
         guard let base = settings.routerBaseURL else { return nil }
-        return RouterClient(base: base, password: settings.routerPassword)
+        let key = base.absoluteString + "\u{1}" + settings.routerPassword
+        if let cached = cachedClient, cached.key == key { return cached.client }
+        let client = RouterClient(base: base, password: settings.routerPassword)
+        cachedClient = (key, client)
+        return client
     }
 
     func refresh() async {
@@ -353,9 +360,22 @@ final class DashboardModel {
         }
         async let icmp = Pinger.ping(host, count: 3)
         // broadbandstatistics.ha renders quickly (<1 s) and doubles as the web-UI reachability check.
-        let start = Date()
+        var start = Date()
         do {
-            broadband = try await client.broadband()
+            // Retry a couple of times before declaring the web UI unreachable: on Wi-Fi a single
+            // request to the gateway occasionally fails even though it's fine.
+            var attempt = 0
+            while true {
+                do {
+                    start = Date()
+                    broadband = try await client.broadband()
+                    break
+                } catch RouterError.unreachable(let msg) {
+                    attempt += 1
+                    if attempt >= 3 { throw RouterError.unreachable(msg) }
+                    try? await Task.sleep(for: .seconds(attempt == 1 ? 3 : 8))
+                }
+            }
             routerReachable = true
             routerLatencyMs = Date().timeIntervalSince(start) * 1000
             routerError = nil
