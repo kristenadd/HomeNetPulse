@@ -59,10 +59,14 @@ struct GatewayDetailView: View {
                           tint: (Int(b?.receiveErrors ?? "0") ?? 0) > 0 ? .orange : nil)
                 DetailRow(key: "Receive drops", value: b?.receiveDrops, last: true)
             } accessory: {
-                Spacer()
-                RebootButton(prominent: true)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
+                Spacer(minLength: 8)
+                // Full title when there's room (Mac, wide panels), else just "Reboot"; never wraps.
+                ViewThatFits(in: .horizontal) {
+                    RebootButton(prominent: true).fixedSize()
+                    RebootButton(compact: true, prominent: true).fixedSize()
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
             }
             if settings.routerPassword.isEmpty || model.rebootStatus != nil {
                 Text(model.rebootStatus ?? "Add the Device Access Code in Settings to enable reboot.")

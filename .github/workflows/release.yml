@@ -1,10 +1,11 @@
 # Builds, signs and releases HomeNet Pulse:
 #   - Mac: Developer ID–signed, notarized and stapled DMG
 #   - iPhone / iPad: ad-hoc .ipa for the team's registered devices, uploaded to Firebase App Distribution
-# then tags vX.Y.Z and publishes a GitHub release with both. There is no in-app auto-update.
+# then tags vX.Y.Z and publishes a GitHub release with both, plus the signed Sparkle feed
+# (appcast.xml) that installed Mac copies check daily (…/releases/latest/download/appcast.xml).
 #
 # Runs on every push to main (not for docs or local-only scripts), or by hand (Actions ▸ Release ▸
-# Run workflow). One macOS job does everything, to keep the private repo's Actions minutes down.
+# Run workflow). One macOS job does everything.
 #
 # Versions: the next version after the newest vX.Y.Z tag (scripts/next-version.sh), patch + 1. Put
 # #minor or #major in a commit message to bump that part, or raise MARKETING_VERSION in project.yml
@@ -19,6 +20,9 @@
 #   NOTARY_API_KEY_P8, NOTARY_API_KEY_ID, NOTARY_API_ISSUER_ID     App Store Connect API key: notarization,
 #                                                                  provisioning profiles, device registration
 #   FIREBASE_SERVICE_ACCOUNT_JSON                                  Firebase project homenet-pulse (App Distribution Admin)
+# and, set by hand (not SigningSecrets):
+#   SPARKLE_PRIVATE_KEY   EdDSA key that signs Mac updates; its public half is SUPublicEDKey in
+#                         project.yml. The original is in the login keychain (Sparkle account HomeNetPulse).
 # Variables:
 #   IOS_BUNDLE_ID, FIREBASE_PROJECT_NUMBER, FIREBASE_IOS_APP_ID    set by SigningSecrets
 #   FIREBASE_GROUPS   optional: tester group aliases to invite on every release (comma-separated)
@@ -111,8 +115,9 @@ jobs:
           DEV: ${{ secrets.APPLE_DEVELOPMENT_P12_BASE64 }}
           DIST: ${{ secrets.APPLE_DISTRIBUTION_P12_BASE64 }}
           KEY: ${{ secrets.NOTARY_API_KEY_P8 }}
+          SPARKLE: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          for v in DEVID:DEVELOPER_ID_P12_BASE64 DEV:APPLE_DEVELOPMENT_P12_BASE64 DIST:APPLE_DISTRIBUTION_P12_BASE64 KEY:NOTARY_API_KEY_P8; do
+          for v in DEVID:DEVELOPER_ID_P12_BASE64 DEV:APPLE_DEVELOPMENT_P12_BASE64 DIST:APPLE_DISTRIBUTION_P12_BASE64 KEY:NOTARY_API_KEY_P8 SPARKLE:SPARKLE_PRIVATE_KEY; do
             eval "[ -n \"\$${v%%:*}\" ]" || { echo "::error::${v#*:} isn't set (see the comment at the top of this workflow)"; exit 1; }
           done
 
@@ -187,6 +192,18 @@ jobs:
           NOTARY_KEYCHAIN: ${{ env.KEYCHAIN }}
         run: scripts/release-mac.sh
 
+      - name: Write the Mac update feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          # The commits since the previous release: Markdown for the release page, HTML for
+          # Sparkle's update window.
+          scripts/release-notes.sh "$VERSION" "$GITHUB_SHA" > build/release/notes.md
+          gh api markdown -f text="$(cat build/release/notes.md)" -f mode=gfm -f context="$GITHUB_REPOSITORY" \
+            > build/release/notes.html
+          scripts/make-appcast.sh "build/release/HomeNetPulse-$VERSION.dmg" "$VERSION" "$BUILD_NUMBER" build/release/notes.html
+
       - name: Publish the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -194,8 +211,7 @@ jobs:
           cd build/release
           dmg="HomeNetPulse-$VERSION.dmg" ipa="HomeNetPulse-$VERSION-ios.ipa"
           shasum -a 256 "$dmg" "$ipa" > "HomeNetPulse-$VERSION.sha256"
-          ../../scripts/release-notes.sh "$VERSION" "$GITHUB_SHA" > notes.md
-          gh release create "v$VERSION" "$dmg" "$ipa" "HomeNetPulse-$VERSION.sha256" \
+          gh release create "v$VERSION" "$dmg" "$ipa" "HomeNetPulse-$VERSION.sha256" appcast.xml \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "HomeNet Pulse $VERSION" --notes-file notes.md
 

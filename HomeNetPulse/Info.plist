@@ -53,6 +53,18 @@
 	<string>HomeNet Pulse uses Location only so macOS reveals which Wi-Fi access point you're connected to. Your location is never stored or sent anywhere.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>HomeNet Pulse uses Location only so iOS reveals which Wi-Fi base station you're connected to. Your location is never stored or sent anywhere.</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://github.com/kristenadd/HomeNetPulse/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>4SQrPe5ohhDH8+XwLsOqWwvaKnKmalj1j6Inc/G57Zo=</string>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

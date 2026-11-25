@@ -14,6 +14,16 @@ struct DetailHeader: View {
     var summary: (@MainActor () -> String)? = nil
     var onClose: (() -> Void)?
 
+    @ViewBuilder private var statusRow: some View {
+        HealthPill(health: health, text: statusText).fixedSize()
+        if let summary {
+            CopyReportButton(title: "Copy Summary", report: summary)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .fixedSize()
+        }
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             NodeIcon(systemName: icon, health: health, size: 56)
@@ -22,13 +32,10 @@ struct DetailHeader: View {
                 if let subtitle {
                     Text(subtitle).font(.subheadline.monospaced()).foregroundStyle(.secondary).copyable(subtitle)
                 }
-                HStack(spacing: 8) {
-                    HealthPill(health: health, text: statusText)
-                    if let summary {
-                        CopyReportButton(title: "Copy Summary", report: summary)
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                    }
+                // Side by side when there's room, else the button goes under the pill; neither wraps its text.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { statusRow }
+                    VStack(alignment: .leading, spacing: 8) { statusRow }
                 }
                 .padding(.top, 2)
             }

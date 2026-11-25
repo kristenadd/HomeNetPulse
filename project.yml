@@ -5,6 +5,10 @@ options:
     iOS: "18.0"
     macOS: "15.0"
   createIntermediateGroups: true
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.10.1
 settings:
   base:
     DEVELOPMENT_TEAM: B4H429V95D
@@ -17,6 +21,10 @@ targets:
     type: application
     supportedDestinations: [iOS, macOS]
     sources: [HomeNetPulse]
+    dependencies:
+      # Mac only: in-app updates from the GitHub releases' appcast.xml (Updater.swift).
+      - package: Sparkle
+        destinationFilters: [macOS]
     entitlements:
       path: HomeNetPulse/HomeNetPulse.entitlements
       properties:
@@ -41,6 +49,17 @@ targets:
         NSLocationWhenInUseUsageDescription: HomeNet Pulse uses Location only so iOS reveals which Wi-Fi base station you're connected to. Your location is never stored or sent anywhere.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        # Sparkle (Mac only; iOS ignores these). The feed is the newest GitHub release's
+        # appcast.xml, written by .github/workflows/release.yml.
+        SUFeedURL: https://github.com/kristenadd/HomeNetPulse/releases/latest/download/appcast.xml
+        # Public half of the EdDSA key in the release workflow's SPARKLE_PRIVATE_KEY secret.
+        SUPublicEDKey: 4SQrPe5ohhDH8+XwLsOqWwvaKnKmalj1j6Inc/G57Zo=
+        # Only accept a signed feed, and check the download before unpacking it.
+        SURequireSignedFeed: true
+        SUVerifyUpdateBeforeExtraction: true
+        # Check daily without asking first (Settings has a toggle to turn it off).
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kristenadd.HomeNetPulse
@@ -49,6 +68,8 @@ targets:
         OTHER_LDFLAGS: ["-lresolv"]
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_HARDENED_RUNTIME[sdk=macosx*]: YES
+        # Mac apps keep embedded frameworks (Sparkle) in Contents/Frameworks.
+        LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]: ["$(inherited)", "@executable_path/../Frameworks"]
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_ENTITLEMENTS[sdk=iphone*]: HomeNetPulse/HomeNetPulse-iOS.entitlements
       # Local Mac Debug builds are a separate app, so their permissions, Keychain item and settings

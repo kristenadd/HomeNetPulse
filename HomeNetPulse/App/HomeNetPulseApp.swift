@@ -10,6 +10,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(Self.menuBarIconEnabled ? .accessory : .regular)
     }
 
+    @MainActor func applicationDidFinishLaunching(_ notification: Notification) {
+        _ = Updater.shared   // starts Sparkle's daily update checks (not in the Debug app)
+    }
+
     /// SwiftUI quits a single-`Window` app when that window closes; keep running while the
     /// menu bar status icon is enabled so monitoring continues in the background.
     /// Relaunching the app (Finder, Spotlight) must not pop open a window while it lives in the
@@ -70,6 +74,13 @@ struct HomeNetPulseApp: App {
         // Start in the menu bar only; the window opens from the menu bar (or relaunching the app).
         .defaultLaunchBehavior(AppDelegate.menuBarIconEnabled ? .suppressed : .presented)
         .restorationBehavior(.disabled)
+        .commands {
+            if Updater.shared.isAvailable {
+                CommandGroup(after: .appInfo) {
+                    Button("Check for Updates…") { Updater.shared.checkForUpdates() }
+                }
+            }
+        }
         MenuBarExtra(isInserted: Binding(get: { settings.showMenuBarIcon },
                                          set: { settings.showMenuBarIcon = $0 })) {
             MenuBarStatusView()

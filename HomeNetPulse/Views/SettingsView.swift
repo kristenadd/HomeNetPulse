@@ -172,6 +172,9 @@ struct SettingsView: View {
                 LabeledContent("Version") {
                     Text(Self.versionString).monospacedDigit().copyable(Self.versionString, label: "Version")
                 }
+                #if os(macOS)
+                UpdateSettings()
+                #endif
             } footer: {
                 Text("\(AppInfo.displayName) · \(AppInfo.bundleID)").frame(maxWidth: .infinity)
             }
@@ -233,3 +236,27 @@ struct SettingsView: View {
         Task { await model.refreshInternet() }
     }
 }
+
+#if os(macOS)
+/// Sparkle update controls (Mac only; the iPhone/iPad app updates through Firebase App Distribution).
+private struct UpdateSettings: View {
+    @ObservedObject private var updater = Updater.shared
+
+    var body: some View {
+        if updater.isAvailable {
+            Toggle("Automatically check for updates", isOn: $updater.automaticallyChecks)
+            LabeledContent {
+                Button("Check for Updates…") { updater.checkForUpdates() }
+                    .disabled(!updater.canCheckForUpdates)
+            } label: {
+                Text("Updates")
+                if let last = updater.lastCheck {
+                    Text("Last checked \(last.formatted(.relative(presentation: .named)))")
+                }
+            }
+        } else {
+            LabeledContent("Updates", value: "Off in the Debug app")
+        }
+    }
+}
+#endif

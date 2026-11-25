@@ -31,6 +31,7 @@
 		A4CD96AB40F5648AF3AAD567 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C46DF420F0323839FC2266A0 /* MenuBarView.swift */; };
 		B2E423299F7E9C2F32D5DD9D /* ParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D674105107F5F173D5257FF /* ParserTests.swift */; };
 		BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D446C4946455D14D71B9FC /* HomeNetPulseApp.swift */; };
+		C2F9208AF11DEA515CC40A13 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; platformFilters = (macos, ); productRef = 21704DD2183B6EE888FF8AF2 /* Sparkle */; };
 		C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = F102479F50B7247FB22764AA /* HTML.swift */; };
 		C87486E276CD084CE8D7064F /* AirPortBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052681950A63201C88ADCCE8 /* AirPortBrowser.swift */; };
 		DCE9B910C458CD5CA806824C /* SpeedTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78FCFD6DFB79CF0B71880FA7 /* SpeedTest.swift */; };
@@ -40,6 +41,7 @@
 		F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830FC37B927B98E42F95DCFB /* Keychain.swift */; };
 		FA45A1B3DDB14A54C60AF1CE /* FiberStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7B8D820BC38CAB544CEE469 /* FiberStatus.swift */; };
 		FA4BF0A757947652747E5C96 /* BaseStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8EF5CD90A38C92CD2DEE3F /* BaseStation.swift */; };
+		FC6C7BB32EF50E766CE7EB0D /* Updater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1463ED25B0FE54F8AD187947 /* Updater.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +59,7 @@
 		052681950A63201C88ADCCE8 /* AirPortBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPortBrowser.swift; sourceTree = "<group>"; };
 		0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopologyComponents.swift; sourceTree = "<group>"; };
 		1115846DC2AD50CFB7B28DCB /* DashboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardModel.swift; sourceTree = "<group>"; };
+		1463ED25B0FE54F8AD187947 /* Updater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updater.swift; sourceTree = "<group>"; };
 		1E7EADE7387AC70CE245B9BC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginToggle.swift; sourceTree = "<group>"; };
 		2D64382380E1319474F1AB3A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -94,6 +97,17 @@
 		F102479F50B7247FB22764AA /* HTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTML.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		347CDE99F6BDCF39A9507EDF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C2F9208AF11DEA515CC40A13 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		0007D539E00F7E48F95B04DA /* HomeNetPulseTests */ = {
 			isa = PBXGroup;
@@ -129,6 +143,7 @@
 				67845DEF76D4E358F881D2DD /* RouterClient.swift */,
 				78FCFD6DFB79CF0B71880FA7 /* SpeedTest.swift */,
 				BFE7E87F79B8FB5F3E8FDA9B /* UnicastMDNS.swift */,
+				1463ED25B0FE54F8AD187947 /* Updater.swift */,
 				EBFCEC33E34F57F8981AB4EF /* WiFiStatus.swift */,
 			);
 			path = Services;
@@ -213,6 +228,7 @@
 			buildPhases = (
 				FA2095A4E08976EAE27534F8 /* Sources */,
 				80304A937EA3795C7BDC35F6 /* Resources */,
+				347CDE99F6BDCF39A9507EDF /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -220,6 +236,7 @@
 			);
 			name = HomeNetPulse;
 			packageProductDependencies = (
+				21704DD2183B6EE888FF8AF2 /* Sparkle */,
 			);
 			productName = HomeNetPulse;
 			productReference = C8A30891B67197536B8A0787 /* HomeNetPulse.app */;
@@ -271,6 +288,9 @@
 			);
 			mainGroup = 0C0F02E48FED7672CA1BD035;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2EDD5E8F2D1A8E7CAAF1F7FE /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9C27C70FC1CA251FF804A88F /* Products */;
 			projectDirPath = "";
@@ -336,6 +356,7 @@
 				DCE9B910C458CD5CA806824C /* SpeedTest.swift in Sources */,
 				41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */,
 				998A300A4D3240EA64E8EA96 /* UnicastMDNS.swift in Sources */,
+				FC6C7BB32EF50E766CE7EB0D /* Updater.swift in Sources */,
 				27CD2C0CC642EA57642D9D6E /* WiFiStatus.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -388,6 +409,10 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
 				);
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -547,6 +572,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				OTHER_LDFLAGS = (
 					"-lresolv",
 				);
@@ -615,6 +644,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2EDD5E8F2D1A8E7CAAF1F7FE /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.10.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		21704DD2183B6EE888FF8AF2 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2EDD5E8F2D1A8E7CAAF1F7FE /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4AFEA1F1C701D6D842623DD3 /* Project object */;
 }
