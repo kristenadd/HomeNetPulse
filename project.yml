@@ -51,12 +51,13 @@ targets:
         ENABLE_HARDENED_RUNTIME[sdk=macosx*]: YES
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_ENTITLEMENTS[sdk=iphone*]: HomeNetPulse/HomeNetPulse-iOS.entitlements
-      # Local Debug builds are a separate app, so their permissions, Keychain item and settings
-      # never mix with the notarized release (which CI builds with the Release configuration).
+      # Local Mac Debug builds are a separate app, so their permissions, Keychain item and settings
+      # never mix with the notarized release in /Applications. iPhone/iPad builds always use the
+      # real app ID: there's one ad-hoc app on those devices.
       configs:
         Debug:
-          PRODUCT_BUNDLE_IDENTIFIER: com.kristenadd.HomeNetPulse.debug
-          APP_DISPLAY_NAME: HomeNet Pulse (Debug)
+          PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]: com.kristenadd.HomeNetPulse.debug
+          APP_DISPLAY_NAME[sdk=macosx*]: HomeNet Pulse (Debug)
   HomeNetPulseTests:
     type: bundle.unit-test
     supportedDestinations: [iOS, macOS]

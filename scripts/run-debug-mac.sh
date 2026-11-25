@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds and runs "HomeNet Pulse (Debug)" (com.kristenadd.HomeNetPulse.debug) from the build folder.
+# Builds and runs "HomeNet Pulse (Debug)" (com.kristenadd.HomeNetPulse.debug, Mac only) from the build folder.
 # It's a separate app from the notarized release in /Applications: its own settings, Keychain item
 # and permissions, so testing never touches the everyday copy. It is never copied to /Applications.
 set -eu

@@ -38,20 +38,20 @@ This downloads the notarized DMG from the GitHub release, checks that Gatekeeper
 
 ## Testing local changes
 
-Debug builds are a separate app, **HomeNet Pulse (Debug)** (`com.kristenadd.HomeNetPulse.debug`), with their own settings, Keychain item and permissions, so testing never touches the installed release.
+On the Mac, Debug builds are a separate app, **HomeNet Pulse (Debug)** (`com.kristenadd.HomeNetPulse.debug`), with their own settings, Keychain item and permissions, so testing never touches the notarized release in `/Applications`. iPhone and iPad have just one app, `com.kristenadd.HomeNetPulse`, whether it comes from Firebase or from `install-ios.sh`.
 
 ```bash
 ./scripts/run-debug-mac.sh   # build and run from the build folder (never copied to /Applications)
-./scripts/install-ios.sh     # install the Debug app on paired iPhones/iPads (add --launch to open it)
+./scripts/install-ios.sh     # install HomeNet Pulse on paired iPhones/iPads (add --launch to open it)
 ```
 
-## Installing the Debug app on iPhone and iPad
+## Installing on iPhone and iPad
 
 ```bash
 ./scripts/install-ios.sh
 ```
 
-Installs **HomeNet Pulse (Debug)** on every paired iPhone and iPad that's available, or only on the device IDs you pass. Add `--launch` to also open it on each device. The release app comes from Firebase App Distribution.
+Builds and installs HomeNet Pulse (the same app ID as the Firebase release, replacing it) on every paired iPhone and iPad that's available, or only on the device IDs you pass. Add `--launch` to also open it on each device.
 
 ## Releasing
 
