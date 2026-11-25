@@ -197,9 +197,7 @@ private struct MenuChainRow: View {
             }
             Spacer(minLength: 6)
             if hovering, let onDetails {
-                Button("Details", action: onDetails)
-                    .buttonStyle(.bordered)
-                    .controlSize(.mini)
+                DetailsButton(sidebar: true, action: onDetails)
                     .transition(.opacity)
             } else if let detail {
                 Text(detail).font(.caption.monospacedDigit())
@@ -216,6 +214,7 @@ private struct MenuChainRow: View {
                     in: RoundedRectangle(cornerRadius: 8))
         .padding(.horizontal, -6)
         .contentShape(Rectangle())
+        .onTapGesture { onDetails?() }   // the whole row is clickable
         .onHover { h in withAnimation(.easeOut(duration: 0.12)) { hovering = h } }
     }
 }

@@ -137,10 +137,13 @@ struct DashboardView: View {
     private var internetNode: some View {
         TopologyNode(title: "Internet", subtitle: model.broadband?.wanIPv4.map { "WAN \($0)" },
                      icon: "globe", health: model.internetHealth) {
-            MetricGrid(items: settings.pingTargets.map { t in
-                let r = model.internetPings[t]
-                return .init(label: t, value: r?.shortSummary ?? "testing…", tint: r?.tint)
-            })
+            VStack(alignment: .leading, spacing: 12) {
+                MetricGrid(items: settings.pingTargets.map { t in
+                    let r = model.internetPings[t]
+                    return .init(label: t, value: r?.shortSummary ?? "testing…", tint: r?.tint)
+                })
+                detailsFooter(.internet)
+            }
         }
         .tappableCard { open(.internet) }
         .selectedOutline(inspected == .internet)
@@ -207,14 +210,7 @@ struct DashboardView: View {
             RebootButton(compact: true)
             Spacer(minLength: 0)
             ManageGatewayButton(compact: compact)
-            Button { open(.gateway) } label: {
-                if compact {
-                    Image(systemName: usesInspector ? "sidebar.trailing" : "chevron.right")
-                        .accessibilityLabel("Details")
-                } else {
-                    Label("Details", systemImage: usesInspector ? "sidebar.trailing" : "chevron.right")
-                }
-            }
+            DetailsButton(sidebar: usesInspector, iconOnly: compact) { open(.gateway) }
         }
         .fixedSize(horizontal: false, vertical: true)
     }
@@ -240,8 +236,12 @@ struct DashboardView: View {
 
     @ViewBuilder private var routerNode: some View {
         if let r = model.mainRouter {
-            TopologyNode(title: r.name, subtitle: r.ipAddress ?? "resolving…", icon: "wifi.router.fill", health: r.health,
-                         content: { stationMetrics(r) }, accessory: { chevron })
+            TopologyNode(title: r.name, subtitle: r.ipAddress ?? "resolving…", icon: "wifi.router.fill", health: r.health) {
+                VStack(alignment: .leading, spacing: 12) {
+                    stationMetrics(r)
+                    detailsFooter(.station(r.id))
+                }
+            }
                 .contentShape(RoundedRectangle(cornerRadius: 16))
                 .tappableCard { open(.station(r.id)) }
                 .copyMenu(title: r.name, items: Self.copyItems(for: r))
@@ -270,7 +270,7 @@ struct DashboardView: View {
                             }
                             Spacer(minLength: 4)
                             HealthPill(health: s.health).fixedSize()
-                            chevron
+                            DetailsButton(sidebar: usesInspector, iconOnly: !usesInspector) { open(.station(s.id)) }
                         }
                         .padding(10)
                         .background(Color.insetBackground, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -295,8 +295,13 @@ struct DashboardView: View {
         ])
     }
 
-    private var chevron: some View {
-        Image(systemName: usesInspector ? "sidebar.trailing" : "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+    /// Bottom-right Details button, aligned with the gateway card's action row.
+    private func detailsFooter(_ route: Route) -> some View {
+        HStack {
+            Spacer()
+            DetailsButton(sidebar: usesInspector) { open(route) }
+        }
+        .padding(.leading, Topology.iconSize + 12)
     }
 
     private var footer: some View {

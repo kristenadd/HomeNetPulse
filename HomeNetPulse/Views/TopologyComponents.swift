@@ -145,6 +145,29 @@ extension PingResult {
     var tint: Color? { health == .good ? nil : health.color }
 }
 
+/// The one "Details" button used on every card and in the menu bar popup, so they all look alike.
+struct DetailsButton: View {
+    /// Mac/iPad open details in a side inspector (sidebar icon); iPhone pushes (chevron).
+    var sidebar: Bool
+    var iconOnly = false
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            if iconOnly {
+                Image(systemName: sidebar ? "sidebar.trailing" : "chevron.right")
+                    .accessibilityLabel("Details")
+            } else {
+                Label("Details", systemImage: sidebar ? "sidebar.trailing" : "chevron.right")
+            }
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .lineLimit(1)
+        .fixedSize()
+    }
+}
+
 /// Opens the gateway's own web interface in the default browser.
 struct ManageGatewayButton: View {
     @Environment(AppSettings.self) private var settings
