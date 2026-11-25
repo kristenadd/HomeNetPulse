@@ -32,6 +32,28 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(HTML.nonce(in: broadbandHTML), "abc123")
     }
 
+    func testConnectionMatching() {
+        let main = BaseStation(name: "Main", txt: AirPortBrowser.parseCSV("raMA=88-1F-A1-30-57-6F,raM2=88-1F-A1-30-57-6E,raCh=149,rCh2=6"))
+        let tc = BaseStation(name: "TC", txt: AirPortBrowser.parseCSV("raMA=4C-32-75-C6-80-0D,raM2=4C-32-75-C6-80-0C,raCh=112,rCh2=1"))
+        // Channel match (no BSSID without Location)
+        var w = WiFiStatus(channel: 112, band: .ghz5, rssi: -37)
+        XCTAssertEqual(ConnectionMatcher.match(w, in: [main, tc])?.0.name, "TC")
+        XCTAssertEqual(ConnectionMatcher.match(w, in: [main, tc])?.1, .channel)
+        XCTAssertEqual(w.frequencyMHz, 5560)
+        XCTAssertEqual(w.frequencyText, "5 GHz · 5560 MHz")
+        // 2.4 GHz channel 6
+        w = WiFiStatus(channel: 6, band: .ghz24)
+        XCTAssertEqual(ConnectionMatcher.match(w, in: [main, tc])?.0.name, "Main")
+        XCTAssertEqual(w.frequencyMHz, 2437)
+        // BSSID wins, including a nearby address on the same radio
+        w = WiFiStatus(bssid: "88:1f:a1:30:57:70", channel: 112, band: .ghz5)
+        XCTAssertEqual(ConnectionMatcher.match(w, in: [main, tc])?.0.name, "Main")
+        XCTAssertEqual(ConnectionMatcher.match(w, in: [main, tc])?.1, .bssid)
+        // Ambiguous channel → no match
+        let other = BaseStation(name: "Other", txt: AirPortBrowser.parseCSV("raCh=112"))
+        XCTAssertNil(ConnectionMatcher.match(WiFiStatus(channel: 112, band: .ghz5), in: [tc, other]))
+    }
+
     func testPONState() {
         var s = BroadbandSummary(sections: [StatSection(title: "GPON Status", rows: [StatRow(key: "PON Link Status", value: "OPERATION (O5)")])])
         XCTAssertEqual(s.ponFriendly, "Connected (O5)")

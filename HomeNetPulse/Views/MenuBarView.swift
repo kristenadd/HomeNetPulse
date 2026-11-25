@@ -113,6 +113,7 @@ struct MenuBarStatusView: View {
             if let r = model.mainRouter {
                 MenuChainRow(icon: "wifi.router.fill", title: r.name, health: r.health,
                              detail: r.ping?.shortSummary, secondary: r.ipAddress,
+                             connected: model.isConnected(r) ? model.wifi : nil,
                              onDetails: { showDetails(.station(r.id)) })
             } else {
                 MenuChainRow(icon: "wifi.router", title: "Router", health: .unknown, detail: nil, secondary: "Searching…")
@@ -121,6 +122,7 @@ struct MenuBarStatusView: View {
                 MenuChainConnector(health: e.health)
                 MenuChainRow(icon: "wifi.router", title: e.name, health: e.health,
                              detail: e.ping?.shortSummary, secondary: e.ipAddress,
+                             connected: model.isConnected(e) ? model.wifi : nil,
                              onDetails: { showDetails(.station(e.id)) })
             }
         }
@@ -183,6 +185,7 @@ private struct MenuChainRow: View {
     var health: Health
     var detail: String?
     var secondary: String?
+    var connected: WiFiStatus? = nil
     var onDetails: (() -> Void)? = nil
     @State private var hovering = false
 
@@ -194,7 +197,11 @@ private struct MenuChainRow: View {
                 if let secondary {
                     Text(secondary).font(.caption).foregroundStyle(.secondary).lineLimit(1).copyable(secondary)
                 }
+                if let connected {
+                    ConnectedBadge(wifi: connected).padding(.top, 2)
+                }
             }
+            .layoutPriority(1)   // keep the name readable next to the ping / Details button
             Spacer(minLength: 6)
             if hovering, let onDetails {
                 DetailsButton(sidebar: true, action: onDetails)

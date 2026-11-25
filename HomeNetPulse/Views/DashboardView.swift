@@ -236,7 +236,8 @@ struct DashboardView: View {
 
     @ViewBuilder private var routerNode: some View {
         if let r = model.mainRouter {
-            TopologyNode(title: r.name, subtitle: r.ipAddress ?? "resolving…", icon: "wifi.router.fill", health: r.health) {
+            TopologyNode(title: r.name, subtitle: r.ipAddress ?? "resolving…", icon: "wifi.router.fill", health: r.health,
+                         connected: model.isConnected(r) ? model.wifi : nil) {
                 VStack(alignment: .leading, spacing: 12) {
                     stationMetrics(r)
                     detailsFooter(.station(r.id))
@@ -267,6 +268,9 @@ struct DashboardView: View {
                                 Text([s.ipAddress ?? "resolving…", s.ping?.shortSummary].compactMap { $0 }.joined(separator: " · "))
                                     .font(.caption.monospacedDigit()).foregroundStyle(s.ping?.tint ?? .secondary).lineLimit(1)
                                 Text(s.modelName).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                                if model.isConnected(s), let wifi = model.wifi {
+                                    ConnectedBadge(wifi: wifi, compact: !usesInspector).padding(.top, 2)
+                                }
                             }
                             Spacer(minLength: 4)
                             HealthPill(health: s.health).fixedSize()

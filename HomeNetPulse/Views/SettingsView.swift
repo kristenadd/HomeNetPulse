@@ -79,6 +79,34 @@ struct SettingsView: View {
             }
             #endif
 
+            Section {
+                Toggle(isOn: Binding(get: { settings.useLocationForWiFi },
+                                     set: { on in
+                                         settings.useLocationForWiFi = on
+                                         if on { LocationAccess.shared.request() }
+                                         Task { await model.refreshWiFi() }
+                                     })) {
+                    #if os(macOS)
+                    Text("Exact match using Location")
+                    #else
+                    Text("Detect connected base station")
+                    #endif
+                }
+                if settings.useLocationForWiFi && LocationAccess.shared.isDenied {
+                    Label("Location access is off for HomeNet Pulse. Turn it on in System Settings › Privacy & Security › Location Services.",
+                          systemImage: "location.slash")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+            } header: {
+                Text("Wi-Fi Connection")
+            } footer: {
+                #if os(macOS)
+                Text("HomeNet Pulse shows a Connected badge on the base station this Mac uses by matching its Wi-Fi channel. Allowing Location lets macOS reveal the access point address for an exact match. Your location is never stored or sent.")
+                #else
+                Text("iOS only reveals which access point you're on when Location is allowed. Your location is never stored or sent.")
+                #endif
+            }
+
             Section("Refresh") {
                 Picker("Auto-refresh every", selection: $settings.refreshInterval) {
                     Text("30 seconds").tag(30.0)

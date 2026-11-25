@@ -8,11 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		089D876262091DF43EA6669B /* DashboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1115846DC2AD50CFB7B28DCB /* DashboardModel.swift */; };
+		27CD2C0CC642EA57642D9D6E /* WiFiStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBFCEC33E34F57F8981AB4EF /* WiFiStatus.swift */; };
 		2CB12BEE41286A9701DE1CD8 /* LaunchAtLoginToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */; };
 		2EDE804A61ED078215706B18 /* DetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37CE35D4B343C37336D5417A /* DetailComponents.swift */; };
 		41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0821533ECF1E6BF210A5B6AA /* TopologyComponents.swift */; };
 		46431D160D9DC12761601C42 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241A99A62E03940B089301F /* DashboardView.swift */; };
 		48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DCAC4241147EAFC2417ED3 /* Pinger.swift */; };
+		6B8B8134F1DDDC87BE04DCD5 /* LocationAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 354FB903E0966AD129675B24 /* LocationAccess.swift */; };
 		706F8275AC64ED79D095D119 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D64382380E1319474F1AB3A /* Assets.xcassets */; };
 		8062FC07F869273FEB02AC73 /* DetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */; };
 		9537348C09EEA2D41A35348F /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC525BFC3112189279810E6 /* AppSettings.swift */; };
@@ -47,11 +49,13 @@
 		1E7EADE7387AC70CE245B9BC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		264CAD891B5EE42161D86BAC /* LaunchAtLoginToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginToggle.swift; sourceTree = "<group>"; };
 		2D64382380E1319474F1AB3A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		354FB903E0966AD129675B24 /* LocationAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccess.swift; sourceTree = "<group>"; };
 		37CE35D4B343C37336D5417A /* DetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailComponents.swift; sourceTree = "<group>"; };
 		4BC525BFC3112189279810E6 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		597FB1E91702595566112483 /* Copyable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Copyable.swift; sourceTree = "<group>"; };
 		5F8EF5CD90A38C92CD2DEE3F /* BaseStation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseStation.swift; sourceTree = "<group>"; };
 		67845DEF76D4E358F881D2DD /* RouterClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterClient.swift; sourceTree = "<group>"; };
+		7187496DA1D907A9A5265FAA /* HomeNetPulse-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "HomeNetPulse-iOS.entitlements"; sourceTree = "<group>"; };
 		830FC37B927B98E42F95DCFB /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		97EAC894F8A3C2E35BBDDBD5 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		9D674105107F5F173D5257FF /* ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParserTests.swift; sourceTree = "<group>"; };
@@ -64,6 +68,7 @@
 		D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViews.swift; sourceTree = "<group>"; };
 		E3D446C4946455D14D71B9FC /* HomeNetPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeNetPulseApp.swift; sourceTree = "<group>"; };
 		EBE2B88944DF6992CF3F9FC8 /* HomeNetPulseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HomeNetPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EBFCEC33E34F57F8981AB4EF /* WiFiStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiStatus.swift; sourceTree = "<group>"; };
 		EDC8A8FAEF10BAF80669BC6D /* HomeNetPulse.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HomeNetPulse.entitlements; sourceTree = "<group>"; };
 		F102479F50B7247FB22764AA /* HTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTML.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -93,8 +98,10 @@
 				B9F923C74ED423387000E326 /* DefaultGateway.swift */,
 				F102479F50B7247FB22764AA /* HTML.swift */,
 				830FC37B927B98E42F95DCFB /* Keychain.swift */,
+				354FB903E0966AD129675B24 /* LocationAccess.swift */,
 				D2DCAC4241147EAFC2417ED3 /* Pinger.swift */,
 				67845DEF76D4E358F881D2DD /* RouterClient.swift */,
+				EBFCEC33E34F57F8981AB4EF /* WiFiStatus.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -103,6 +110,7 @@
 			isa = PBXGroup;
 			children = (
 				2D64382380E1319474F1AB3A /* Assets.xcassets */,
+				7187496DA1D907A9A5265FAA /* HomeNetPulse-iOS.entitlements */,
 				EDC8A8FAEF10BAF80669BC6D /* HomeNetPulse.entitlements */,
 				1E7EADE7387AC70CE245B9BC /* Info.plist */,
 				321C6154626AF63CED90DACB /* App */,
@@ -272,11 +280,13 @@
 				BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */,
 				F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */,
 				2CB12BEE41286A9701DE1CD8 /* LaunchAtLoginToggle.swift in Sources */,
+				6B8B8134F1DDDC87BE04DCD5 /* LocationAccess.swift in Sources */,
 				A4CD96AB40F5648AF3AAD567 /* MenuBarView.swift in Sources */,
 				48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */,
 				EE090D3DFBA68BEC1BFE30C4 /* RouterClient.swift in Sources */,
 				F3201B7AE31F9EB8519F3936 /* SettingsView.swift in Sources */,
 				41C5F9582C374F8B538B2405 /* TopologyComponents.swift in Sources */,
+				27CD2C0CC642EA57642D9D6E /* WiFiStatus.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,6 +329,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = HomeNetPulse/HomeNetPulse.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = "HomeNetPulse/HomeNetPulse-iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				INFOPLIST_FILE = HomeNetPulse/Info.plist;
@@ -470,6 +481,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = HomeNetPulse/HomeNetPulse.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = "HomeNetPulse/HomeNetPulse-iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				INFOPLIST_FILE = HomeNetPulse/Info.plist;

@@ -23,6 +23,7 @@ targets:
         com.apple.security.app-sandbox: true
         com.apple.security.network.client: true
         com.apple.security.network.server: true
+        com.apple.security.personal-information.location: true
     info:
       path: HomeNetPulse/Info.plist
       properties:
@@ -33,6 +34,8 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSLocalNetworkUsageDescription: HomeNet Pulse discovers your AirPort base stations and checks the health of your router on the local network.
         NSBonjourServices: [_airport._tcp]
+        NSLocationUsageDescription: HomeNet Pulse uses Location only so macOS reveals which Wi-Fi access point you're connected to. Your location is never stored or sent anywhere.
+        NSLocationWhenInUseUsageDescription: HomeNet Pulse uses Location only so iOS reveals which Wi-Fi base station you're connected to. Your location is never stored or sent anywhere.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
     settings:
@@ -41,6 +44,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_HARDENED_RUNTIME[sdk=macosx*]: YES
         TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_ENTITLEMENTS[sdk=iphone*]: HomeNetPulse/HomeNetPulse-iOS.entitlements
   HomeNetPulseTests:
     type: bundle.unit-test
     supportedDestinations: [iOS, macOS]

@@ -37,6 +37,12 @@ final class DashboardModel {
     var lastRefresh: Date?
     var rebootStatus: String?
     var rebooting = false
+    /// This device's Wi-Fi connection and the base station it is associated with.
+    var wifi: WiFiStatus?
+    var connectedStationID: String?
+    var connectionMatch: ConnectionMatch?
+    private var wifiTask: Task<Void, Never>?
+
     /// Set by the menu bar popup to ask the main window to show an item's details.
     var requestedRoute: Route?
 
@@ -52,6 +58,13 @@ final class DashboardModel {
     func start() {
         guard autoRefreshTask == nil else { return }
         browser.start()
+        // Wi-Fi association changes faster than the full refresh; poll it cheaply.
+        wifiTask = Task { [weak self] in
+            while !Task.isCancelled {
+                await self?.refreshWiFi()
+                try? await Task.sleep(for: .seconds(5))
+            }
+        }
         autoRefreshTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(2))   // let Bonjour populate
             while !Task.isCancelled {
@@ -65,6 +78,8 @@ final class DashboardModel {
     func stop() {
         autoRefreshTask?.cancel()
         autoRefreshTask = nil
+        wifiTask?.cancel()
+        wifiTask = nil
         browser.stop()
     }
 
@@ -130,6 +145,20 @@ final class DashboardModel {
         return avgs.isEmpty ? nil : avgs.reduce(0, +) / Double(avgs.count)
     }
 
+    func refreshWiFi() async {
+        let status = await WiFiReader.current()
+        wifi = status
+        if let status, let (station, how) = ConnectionMatcher.match(status, in: baseStations) {
+            connectedStationID = station.id
+            connectionMatch = how
+        } else {
+            connectedStationID = nil
+            connectionMatch = nil
+        }
+    }
+
+    func isConnected(_ station: BaseStation) -> Bool { connectedStationID == station.id }
+
     func setMainRouter(_ station: BaseStation?) {
         settings.mainRouterMAC = station?.ethernetMAC
     }
@@ -178,6 +207,7 @@ final class DashboardModel {
         async let internet: Void = refreshInternet()
         async let router: Void = refreshRouter()
         _ = await (airports, internet, router)
+        await refreshWiFi()
     }
 
     func refreshInternet() async {

@@ -18,6 +18,8 @@ final class AppSettings {
     var mainRouterMAC: String? { didSet { save() } }
 
     var showMenuBarIcon: Bool { didSet { save() } }
+    /// Use Location access to read the Wi-Fi BSSID for an exact base station match.
+    var useLocationForWiFi: Bool { didSet { save() } }
     var showLatencyInMenuBar: Bool { didSet { save() } }
 
     var routerURL: String
@@ -32,6 +34,7 @@ final class AppSettings {
         trustedBaseStationMACs = Set(defaults.stringArray(forKey: "trustedMACs") ?? [])
         trustedRouterMAC = defaults.string(forKey: "trustedRouterMAC")
         mainRouterMAC = defaults.string(forKey: "mainRouterMAC")
+        useLocationForWiFi = defaults.bool(forKey: "useLocationForWiFi")
         showMenuBarIcon = defaults.object(forKey: "showMenuBarIcon") == nil ? true : defaults.bool(forKey: "showMenuBarIcon")
         showLatencyInMenuBar = defaults.object(forKey: "showLatencyInMenuBar") == nil ? true : defaults.bool(forKey: "showLatencyInMenuBar")
         let creds = RouterCredentialStore.load()
@@ -46,6 +49,7 @@ final class AppSettings {
         defaults.set(trustedRouterMAC, forKey: "trustedRouterMAC")
         defaults.set(mainRouterMAC, forKey: "mainRouterMAC")
         defaults.set(showMenuBarIcon, forKey: "showMenuBarIcon")
+        defaults.set(useLocationForWiFi, forKey: "useLocationForWiFi")
         defaults.set(showLatencyInMenuBar, forKey: "showLatencyInMenuBar")
     }
 

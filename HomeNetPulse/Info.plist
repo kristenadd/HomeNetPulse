@@ -35,6 +35,10 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>HomeNet Pulse discovers your AirPort base stations and checks the health of your router on the local network.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>HomeNet Pulse uses Location only so macOS reveals which Wi-Fi access point you're connected to. Your location is never stored or sent anywhere.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>HomeNet Pulse uses Location only so iOS reveals which Wi-Fi base station you're connected to. Your location is never stored or sent anywhere.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

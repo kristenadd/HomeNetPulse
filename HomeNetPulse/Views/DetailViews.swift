@@ -158,6 +158,23 @@ struct BaseStationDetail: View {
                 }
             }
 
+            if model.isConnected(station), let wifi = model.wifi {
+                DetailCard(title: "Your Connection", systemImage: "wifi") {
+                    DetailRow(key: "Status", value: "Connected", mono: false, tint: .accentColor)
+                    DetailRow(key: "Signal", value: [wifi.signalText, wifi.signalQuality].compactMap { $0 }.joined(separator: " · ").nilIfEmpty)
+                    if let noise = wifi.noise { DetailRow(key: "Noise", value: "\(noise) dBm") }
+                    if let snr = wifi.snr { DetailRow(key: "Signal-to-noise", value: "\(snr) dB") }
+                    if let band = wifi.band { DetailRow(key: "Band", value: band.rawValue) }
+                    if let ch = wifi.channel {
+                        DetailRow(key: "Channel", value: [String(ch), wifi.channelWidthMHz.map { "\($0) MHz wide" }].compactMap { $0 }.joined(separator: " · "))
+                    }
+                    if let rate = wifi.txRateMbps { DetailRow(key: "Link rate", value: String(format: "%.0f Mbps", rate)) }
+                    if let ssid = wifi.ssid { DetailRow(key: "Network", value: ssid, mono: false) }
+                    if let bssid = wifi.bssid { DetailRow(key: "Access point (BSSID)", value: bssid) }
+                    DetailRow(key: "Identified", value: model.connectionMatch?.label, mono: false, last: true)
+                }
+            }
+
             DetailCard(title: "Role", systemImage: "point.3.connected.trianglepath.dotted") {
                 HStack {
                     Text(isMain ? "Main router" : "Extender").font(.callout.weight(.medium))

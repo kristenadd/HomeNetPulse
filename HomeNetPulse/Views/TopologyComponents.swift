@@ -46,6 +46,7 @@ struct TopologyNode<Content: View, Accessory: View>: View {
     var icon: String
     var health: Health
     var statusText: String?
+    var connected: WiFiStatus? = nil
     @ViewBuilder var content: Content
     @ViewBuilder var accessory: Accessory
 
@@ -60,6 +61,7 @@ struct TopologyNode<Content: View, Accessory: View>: View {
                             .lineLimit(1).truncationMode(.middle)
                             .copyable(subtitle)
                     }
+                    if let connected { ConnectedBadge(wifi: connected).padding(.top, 2) }
                 }
                 Spacer(minLength: 8)
                 HealthPill(health: health, text: statusText).fixedSize()
@@ -79,9 +81,9 @@ struct TopologyNode<Content: View, Accessory: View>: View {
 
 extension TopologyNode where Accessory == EmptyView {
     init(title: String, subtitle: String?, icon: String, health: Health, statusText: String? = nil,
-         @ViewBuilder content: () -> Content) {
+         connected: WiFiStatus? = nil, @ViewBuilder content: () -> Content) {
         self.init(title: title, subtitle: subtitle, icon: icon, health: health, statusText: statusText,
-                  content: content, accessory: { EmptyView() })
+                  connected: connected, content: content, accessory: { EmptyView() })
     }
 }
 
@@ -143,6 +145,30 @@ extension PingResult {
         return lossPercent > 0 ? String(format: "%@ · %.0f%% loss", ms, lossPercent) : ms
     }
     var tint: Color? { health == .good ? nil : health.color }
+}
+
+/// "Connected · 5 GHz · −37 dBm" with live Wi-Fi bars, shown on the base station this device uses.
+struct ConnectedBadge: View {
+    var wifi: WiFiStatus
+    var compact = false
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "wifi", variableValue: Double(wifi.bars) / 4)
+                .font(.caption.weight(.semibold))
+            Text(compact || wifi.badgeText.isEmpty ? "Connected" : "Connected · \(wifi.badgeText)")
+                .lineLimit(1)
+        }
+        .font(.caption.weight(.semibold).monospacedDigit())
+        .foregroundStyle(Color.accentColor)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(Color.accentColor.opacity(0.12), in: Capsule())
+        .fixedSize()
+        .help([wifi.channelText, wifi.signalQuality.map { "\($0) signal" }]
+            .compactMap { $0 }.joined(separator: " · "))
+        .accessibilityLabel("Connected, \(wifi.badgeText)")
+    }
 }
 
 /// The one "Details" button used on every card and in the menu bar popup, so they all look alike.
