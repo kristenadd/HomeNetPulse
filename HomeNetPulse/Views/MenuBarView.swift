@@ -68,7 +68,7 @@ struct MenuBarStatusView: View {
             footer
         }
         .padding(16)
-        .frame(width: 340)
+        .frame(width: 400)
     }
 
     private var header: some View {
@@ -213,6 +213,7 @@ private struct MenuChainRow: View {
             Spacer(minLength: 6)
             if hovering, let onDetails {
                 DetailsButton(sidebar: true, action: onDetails)
+                    .layoutPriority(2)
                     .transition(.opacity)
             } else if let detail {
                 Text(detail).font(.caption.monospacedDigit())
@@ -224,10 +225,13 @@ private struct MenuChainRow: View {
                 .help(health.label)
         }
         .padding(.vertical, 3)
-        .padding(.horizontal, 6)
-        .background(hovering && onDetails != nil ? Color.primary.opacity(0.06) : .clear,
-                    in: RoundedRectangle(cornerRadius: 8))
-        .padding(.horizontal, -6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // The hover highlight extends slightly past the row without changing its layout width.
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(hovering && onDetails != nil ? Color.primary.opacity(0.06) : .clear)
+                .padding(.horizontal, -6)
+        }
         .contentShape(Rectangle())
         .onTapGesture { onDetails?() }   // the whole row is clickable
         .onHover { h in withAnimation(.easeOut(duration: 0.12)) { hovering = h } }

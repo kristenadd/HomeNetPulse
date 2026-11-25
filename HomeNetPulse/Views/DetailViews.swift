@@ -139,6 +139,15 @@ struct BaseStationDetail: View {
             DetailHeader(icon: isMain ? "wifi.router.fill" : "wifi.router", title: station.name,
                          subtitle: station.ipAddress ?? "resolving…", health: station.health, onClose: onClose)
 
+            HStack(spacing: 10) {
+                ManageAirPortButton(prominent: true)
+                #if os(macOS)
+                Text("Open AirPort Utility").font(.caption).foregroundStyle(.secondary)
+                #else
+                Text("Open AirPort Utility (via the App Store)").font(.caption).foregroundStyle(.secondary)
+                #endif
+            }
+
             StatTileGrid {
                 StatTile(label: "Avg ping", value: station.ping?.avgMs.map { String(format: "%.1f", $0) } ?? "—",
                          unit: "ms", tint: station.ping?.tint)

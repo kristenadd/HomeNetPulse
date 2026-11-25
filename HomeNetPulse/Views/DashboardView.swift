@@ -278,7 +278,7 @@ struct DashboardView: View {
                          connected: model.isConnected(r) ? model.wifi : nil) {
                 VStack(alignment: .leading, spacing: 12) {
                     stationMetrics(r)
-                    detailsFooter(.station(r.id))
+                    detailsFooter(.station(r.id), manageAirPort: true)
                 }
             }
                 .contentShape(RoundedRectangle(cornerRadius: 16))
@@ -312,6 +312,7 @@ struct DashboardView: View {
                             }
                             Spacer(minLength: 4)
                             HealthPill(health: s.health).fixedSize()
+                            ManageAirPortButton(compact: !usesInspector)
                             DetailsButton(sidebar: usesInspector, iconOnly: !usesInspector) { open(.station(s.id)) }
                         }
                         .padding(10)
@@ -369,9 +370,10 @@ struct DashboardView: View {
     }
 
     /// Bottom-right Details button, aligned with the gateway card's action row.
-    private func detailsFooter(_ route: Route) -> some View {
-        HStack {
+    private func detailsFooter(_ route: Route, manageAirPort: Bool = false) -> some View {
+        HStack(spacing: 8) {
             Spacer()
+            if manageAirPort { ManageAirPortButton() }
             DetailsButton(sidebar: usesInspector) { open(route) }
         }
         .padding(.leading, Topology.iconSize + 12)

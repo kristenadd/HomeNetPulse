@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 /// Rounded status capsule, e.g. "● Healthy".
 struct HealthPill: View {
@@ -192,6 +195,43 @@ struct DetailsButton: View {
         .controlSize(.small)
         .lineLimit(1)
         .fixedSize()
+    }
+}
+
+/// Opens AirPort Utility: the built-in app on Mac; on iPhone/iPad its App Store page, which shows
+/// "Open" when it's installed and "Get" when it isn't.
+struct ManageAirPortButton: View {
+    @Environment(\.openURL) private var openURL
+    var compact = false
+    var prominent = false
+
+    static let appStoreURL = URL(string: "https://apps.apple.com/app/id427276530")!   // AirPort Utility
+
+    var body: some View {
+        let button = Button(action: open) {
+            if compact {
+                Image(systemName: "slider.horizontal.3").accessibilityLabel("Manage in AirPort Utility")
+            } else {
+                Label("Manage", systemImage: "slider.horizontal.3")
+            }
+        }
+        .controlSize(.small)
+        .lineLimit(1)
+        .fixedSize()
+        .help("Open AirPort Utility")
+        if prominent { button.buttonStyle(.borderedProminent) } else { button.buttonStyle(.bordered) }
+    }
+
+    private func open() {
+        #if os(macOS)
+        if let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.airport.airportutility") {
+            NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration())
+        } else {
+            openURL(Self.appStoreURL)
+        }
+        #else
+        openURL(URL(string: "itms-apps://apps.apple.com/app/id427276530") ?? Self.appStoreURL)
+        #endif
     }
 }
 
