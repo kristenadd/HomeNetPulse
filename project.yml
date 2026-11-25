@@ -33,7 +33,7 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSLocalNetworkUsageDescription: HomeNet Pulse discovers your AirPort base stations and checks the health of your router on the local network.
-        NSBonjourServices: [_airport._tcp]
+        NSBonjourServices: [_airport._tcp, _companion-link._tcp, _airplay._tcp, _raop._tcp, _googlecast._tcp, _hap._tcp, _sonos._tcp, _spotify-connect._tcp, _ipp._tcp, _printer._tcp, _smb._tcp, _ssh._tcp, _http._tcp, _matter._tcp, _amzn-wplay._tcp]
         NSLocationUsageDescription: HomeNet Pulse uses Location only so macOS reveals which Wi-Fi access point you're connected to. Your location is never stored or sent anywhere.
         NSLocationWhenInUseUsageDescription: HomeNet Pulse uses Location only so iOS reveals which Wi-Fi base station you're connected to. Your location is never stored or sent anywhere.
         NSAppTransportSecurity:

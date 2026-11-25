@@ -82,8 +82,10 @@ enum Pinger {
         dest.sin_addr = addr
 
         let identifier = UInt16.random(in: 1...UInt16.max)
+        // Random sequence base so concurrent pings (e.g. a LAN sweep) never match each other's replies.
+        let seqBase = UInt16.random(in: 0...UInt16.max)
         for seq in 0..<count {
-            let packet = makeEchoRequest(id: identifier, seq: UInt16(seq))
+            let packet = makeEchoRequest(id: identifier, seq: seqBase &+ UInt16(seq))
             let start = DispatchTime.now()
             let sent = packet.withUnsafeBytes { buf in
                 withUnsafePointer(to: &dest) {
@@ -97,7 +99,7 @@ enum Pinger {
                 result.error = "Send failed: \(String(cString: strerror(errno)))"
                 continue
             }
-            if let rtt = awaitReply(fd: fd, id: identifier, seq: UInt16(seq), start: start, timeout: timeout) {
+            if let rtt = awaitReply(fd: fd, from: addr, seq: seqBase &+ UInt16(seq), start: start, timeout: timeout) {
                 result.received += 1
                 result.rttsMs.append(rtt)
             }
@@ -107,7 +109,7 @@ enum Pinger {
         return result
     }
 
-    private static func awaitReply(fd: Int32, id: UInt16, seq: UInt16, start: DispatchTime, timeout: TimeInterval) -> Double? {
+    private static func awaitReply(fd: Int32, from expected: in_addr, seq: UInt16, start: DispatchTime, timeout: TimeInterval) -> Double? {
         let deadline = start.uptimeNanoseconds + UInt64(timeout * 1_000_000_000)
         var buffer = [UInt8](repeating: 0, count: 2048)
         while true {
@@ -117,8 +119,14 @@ enum Pinger {
             let remainingMs = Int32((deadline - now) / 1_000_000)
             let r = poll(&pfd, 1, max(remainingMs, 1))
             if r <= 0 { if r < 0 && errno == EINTR { continue }; return nil }
-            let n = recv(fd, &buffer, buffer.count, 0)
+            var src = sockaddr_in()
+            var srcLen = socklen_t(MemoryLayout<sockaddr_in>.size)
+            let n = withUnsafeMutablePointer(to: &src) {
+                $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { recvfrom(fd, &buffer, buffer.count, 0, $0, &srcLen) }
+            }
             guard n > 0 else { continue }
+            // ICMP datagram sockets can see other sockets' echo replies: only accept our host's.
+            guard src.sin_addr.s_addr == expected.s_addr else { continue }
             var offset = 0
             // Darwin delivers the IP header on ICMP datagram sockets.
             if buffer[0] >> 4 == 4 { offset = Int(buffer[0] & 0x0F) * 4 }

@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum Route: Hashable {
+    case devices
     case internet
     case gateway
     case station(String)
@@ -61,6 +62,7 @@ struct DashboardView: View {
         let close: (() -> Void)? = inInspector ? { withAnimation(.snappy) { inspected = nil } } : nil
         switch route {
         case .internet: InternetDetailView(onClose: close)
+        case .devices: DevicesDetailView(onClose: close)
         case .gateway: GatewayDetailView(onClose: close)
         case .station(let id):
             if let s = model.baseStations.first(where: { $0.id == id }) { BaseStationDetail(station: s, onClose: close) }
@@ -85,6 +87,8 @@ struct DashboardView: View {
                         TopologyConnector(health: model.extendersHealth, label: nil)
                         extendersNode
                     }
+                    devicesNode
+                        .padding(.top, 28)
                     footer
                 }
                 .padding(16)
@@ -304,6 +308,36 @@ struct DashboardView: View {
                 }
             }
         }
+    }
+
+    // MARK: Devices
+
+    private var devicesNode: some View {
+        let devices = model.lanDevices
+        let named = devices.filter { $0.hostName != nil }.count
+        let slow = devices.filter { ($0.latencyMs ?? 0) > 100 }.count
+        return TopologyNode(title: "Devices on Network",
+                            subtitle: model.lanInterface?.cidr,
+                            icon: "laptopcomputer.and.iphone",
+                            health: devices.isEmpty ? .unknown : .good,
+                            statusText: model.lanScanning ? "Scanning…" : (devices.isEmpty ? nil : "\(devices.count) found")) {
+            VStack(alignment: .leading, spacing: 12) {
+                if model.lanScanning && devices.isEmpty {
+                    ProgressView(value: model.lanProgress).padding(.leading, Topology.iconSize + 12)
+                } else {
+                    MetricGrid(items: [
+                        .init(label: "Devices", value: devices.isEmpty ? nil : "\(devices.count)"),
+                        .init(label: "Named", value: devices.isEmpty ? nil : "\(named)"),
+                        .init(label: "Slow (>100 ms)", value: devices.isEmpty ? nil : "\(slow)", tint: slow > 0 ? .orange : nil),
+                        .init(label: "Last scan", value: model.lastLANScan.map { $0.formatted(date: .omitted, time: .shortened) }),
+                    ])
+                }
+                detailsFooter(.devices)
+            }
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 16))
+        .tappableCard { open(.devices) }
+        .selectedOutline(inspected == .devices)
     }
 
     private func stationMetrics(_ s: BaseStation) -> some View {

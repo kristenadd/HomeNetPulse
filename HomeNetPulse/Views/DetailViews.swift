@@ -357,3 +357,147 @@ struct SpeedTestSection: View {
         }
     }
 }
+
+struct DevicesDetailView: View {
+    @Environment(DashboardModel.self) private var model
+    var onClose: (() -> Void)?
+    @State private var search = ""
+    @State private var sort: Sort = .address
+
+    enum Sort: String, CaseIterable { case address = "Address", name = "Name", latency = "Latency" }
+
+    private var filtered: [LANDevice] {
+        var list = model.lanDevices
+        if !search.isEmpty {
+            list = list.filter { d in
+                [model.displayName(of: d), d.ip, d.services.joined(separator: " ")]
+                    .contains { $0.localizedCaseInsensitiveContains(search) }
+            }
+        }
+        switch sort {
+        case .address: return list.sorted { $0.sortKey < $1.sortKey }
+        case .name: return list.sorted { model.displayName(of: $0).localizedStandardCompare(model.displayName(of: $1)) == .orderedAscending }
+        case .latency: return list.sorted { ($0.latencyMs ?? .infinity) < ($1.latencyMs ?? .infinity) }
+        }
+    }
+
+    var body: some View {
+        DetailPage(title: "Devices") {
+            DetailHeader(icon: "laptopcomputer.and.iphone", title: "Devices on Network",
+                         subtitle: model.lanInterface.map { "\($0.cidr) · \($0.name)" },
+                         health: model.lanDevices.isEmpty ? .unknown : .good,
+                         statusText: model.lanScanning ? "Scanning…" : "\(model.lanDevices.count) found",
+                         onClose: onClose)
+
+            HStack(spacing: 10) {
+                TextField("Search name, IP or type", text: $search)
+                    .textFieldStyle(.roundedBorder)
+                Picker("Sort", selection: $sort) {
+                    ForEach(Sort.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                }
+                .labelsHidden()
+                .fixedSize()
+                Button {
+                    Task { await model.scanLAN() }
+                } label: {
+                    if model.lanScanning { ProgressView().controlSize(.small) } else { Text("Scan") }
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .disabled(model.lanScanning)
+            }
+            if model.lanScanning {
+                ProgressView(value: model.lanProgress)
+            }
+
+            VStack(spacing: 0) {
+                if filtered.isEmpty {
+                    Text(model.lanScanning ? "Scanning your network…" : "No devices found.")
+                        .font(.callout).foregroundStyle(.secondary).padding(.vertical, 14)
+                }
+                ForEach(Array(filtered.enumerated()), id: \.element.id) { i, d in
+                    DeviceRow(device: d, name: model.displayName(of: d), role: model.role(of: d),
+                              last: i == filtered.count - 1)
+                }
+            }
+            .padding(.horizontal, 14)
+            .background(Color.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            Text("Found by pinging every address on your network and reading Bonjour names. Devices that are asleep or block ping may be missing until they wake.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct DeviceRow: View {
+    var device: LANDevice
+    var name: String
+    var role: DashboardModel.DeviceRole?
+    var last: Bool
+
+    private var icon: String {
+        switch role {
+        case .thisDevice?: return "person.crop.circle"
+        case .mainRouter?, .baseStation?: return "wifi.router"
+        case nil: break
+        }
+        let s = device.services
+        if s.contains("Printer") { return "printer" }
+        if s.contains("Chromecast") || name.localizedCaseInsensitiveContains("tv") { return "tv" }
+        if s.contains("Apple device") { return name.localizedCaseInsensitiveContains("ipad") ? "ipad" : name.localizedCaseInsensitiveContains("mac") ? "laptopcomputer" : "appletv" }
+        if s.contains("AirPlay audio") || s.contains("Sonos") || s.contains("Spotify Connect") { return "hifispeaker" }
+        if s.contains("HomeKit") || s.contains("Matter") { return "homekit" }
+        if s.contains("File sharing") { return "externaldrive.connected.to.line.below" }
+        return "questionmark.circle"
+    }
+
+    private var roleText: String? {
+        switch role {
+        case .thisDevice?: "This device"
+        case .mainRouter?: "Router"
+        case .baseStation?: "Base station"
+        case nil: nil
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.body)
+                    .foregroundStyle(device.hostName == nil && role == nil ? Color.secondary : .accentColor)
+                    .frame(width: 26)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(name).font(.callout.weight(.medium)).lineLimit(1)
+                            .foregroundStyle(device.hostName == nil && role == nil ? Color.secondary : .primary)
+                        if let roleText {
+                            Text(roleText).font(.caption2.weight(.semibold))
+                                .padding(.horizontal, 6).padding(.vertical, 1)
+                                .background(Color.accentColor.opacity(0.12), in: Capsule())
+                                .foregroundStyle(Color.accentColor)
+                        }
+                    }
+                    Text(([device.ip] + device.services).joined(separator: " · "))
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer(minLength: 8)
+                if let ms = device.latencyMs {
+                    Text(ms < 10 ? String(format: "%.1f ms", ms) : String(format: "%.0f ms", ms))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(ms > 100 ? Color.orange : .secondary)
+                } else {
+                    Text("no ping").font(.caption).foregroundStyle(.tertiary)
+                }
+            }
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+            .copyMenu(title: name, items: [
+                .init(label: "Name", value: device.hostName),
+                .init(label: "IP Address", value: device.ip),
+                .init(label: "Services", value: device.services.joined(separator: ", ").nilIfEmpty),
+            ])
+            if !last { Divider() }
+        }
+    }
+}

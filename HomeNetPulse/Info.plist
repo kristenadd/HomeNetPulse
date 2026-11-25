@@ -32,6 +32,20 @@
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_airport._tcp</string>
+		<string>_companion-link._tcp</string>
+		<string>_airplay._tcp</string>
+		<string>_raop._tcp</string>
+		<string>_googlecast._tcp</string>
+		<string>_hap._tcp</string>
+		<string>_sonos._tcp</string>
+		<string>_spotify-connect._tcp</string>
+		<string>_ipp._tcp</string>
+		<string>_printer._tcp</string>
+		<string>_smb._tcp</string>
+		<string>_ssh._tcp</string>
+		<string>_http._tcp</string>
+		<string>_matter._tcp</string>
+		<string>_amzn-wplay._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>HomeNet Pulse discovers your AirPort base stations and checks the health of your router on the local network.</string>

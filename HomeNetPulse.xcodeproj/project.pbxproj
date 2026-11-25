@@ -16,6 +16,7 @@
 		48C30A1704C86CFAFD7A8C83 /* Pinger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DCAC4241147EAFC2417ED3 /* Pinger.swift */; };
 		6B8B8134F1DDDC87BE04DCD5 /* LocationAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 354FB903E0966AD129675B24 /* LocationAccess.swift */; };
 		706F8275AC64ED79D095D119 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D64382380E1319474F1AB3A /* Assets.xcassets */; };
+		7873E85004F93DF21C809BBC /* LANScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71653689E511CB60186F676 /* LANScanner.swift */; };
 		8062FC07F869273FEB02AC73 /* DetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */; };
 		9537348C09EEA2D41A35348F /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC525BFC3112189279810E6 /* AppSettings.swift */; };
 		9A3B3C0B0E5E3DBDF19559D5 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97EAC894F8A3C2E35BBDDBD5 /* Components.swift */; };
@@ -69,6 +70,7 @@
 		D2DCAC4241147EAFC2417ED3 /* Pinger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pinger.swift; sourceTree = "<group>"; };
 		D666BCC2F45B42FB7416EAE5 /* DetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViews.swift; sourceTree = "<group>"; };
 		E3D446C4946455D14D71B9FC /* HomeNetPulseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeNetPulseApp.swift; sourceTree = "<group>"; };
+		E71653689E511CB60186F676 /* LANScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANScanner.swift; sourceTree = "<group>"; };
 		EBE2B88944DF6992CF3F9FC8 /* HomeNetPulseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HomeNetPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBFCEC33E34F57F8981AB4EF /* WiFiStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiStatus.swift; sourceTree = "<group>"; };
 		EDC8A8FAEF10BAF80669BC6D /* HomeNetPulse.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HomeNetPulse.entitlements; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				B9F923C74ED423387000E326 /* DefaultGateway.swift */,
 				F102479F50B7247FB22764AA /* HTML.swift */,
 				830FC37B927B98E42F95DCFB /* Keychain.swift */,
+				E71653689E511CB60186F676 /* LANScanner.swift */,
 				354FB903E0966AD129675B24 /* LocationAccess.swift */,
 				D2DCAC4241147EAFC2417ED3 /* Pinger.swift */,
 				67845DEF76D4E358F881D2DD /* RouterClient.swift */,
@@ -282,6 +285,7 @@
 				C7D8DD5AAC1877A6746E0372 /* HTML.swift in Sources */,
 				BC858653F0090BF47A29560A /* HomeNetPulseApp.swift in Sources */,
 				F3444D3B43586F5518E79F1C /* Keychain.swift in Sources */,
+				7873E85004F93DF21C809BBC /* LANScanner.swift in Sources */,
 				2CB12BEE41286A9701DE1CD8 /* LaunchAtLoginToggle.swift in Sources */,
 				6B8B8134F1DDDC87BE04DCD5 /* LocationAccess.swift in Sources */,
 				A4CD96AB40F5648AF3AAD567 /* MenuBarView.swift in Sources */,

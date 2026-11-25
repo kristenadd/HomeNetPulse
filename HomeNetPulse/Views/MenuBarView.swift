@@ -145,6 +145,12 @@ struct MenuBarStatusView: View {
     private var footer: some View {
         VStack(alignment: .leading, spacing: 10) {
             Divider()
+            MenuChainRow(icon: "laptopcomputer.and.iphone", title: "Devices on Network",
+                         health: model.lanDevices.isEmpty ? .unknown : .good,
+                         detail: model.lanScanning ? "Scanning…" : (model.lanDevices.isEmpty ? nil : "\(model.lanDevices.count)"),
+                         secondary: model.lanInterface?.cidr,
+                         onDetails: { showDetails(.devices) })
+            Divider()
             HStack {
                 if let last = model.lastRefresh {
                     Text("Updated \(last.formatted(date: .omitted, time: .shortened))")

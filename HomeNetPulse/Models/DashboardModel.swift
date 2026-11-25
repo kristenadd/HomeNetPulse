@@ -37,6 +37,13 @@ final class DashboardModel {
     var lastRefresh: Date?
     var rebootStatus: String?
     var rebooting = false
+    /// Devices found by sweeping the LAN.
+    var lanDevices: [LANDevice] = []
+    var lanInterface: LocalInterface?
+    var lanScanning = false
+    var lanProgress: Double = 0
+    var lastLANScan: Date?
+
     /// Gateway speed test (cgi-bin/speed.ha).
     var speedHistory: [SpeedTestEntry] = []
     var speedTestRunning = false
@@ -153,6 +160,44 @@ final class DashboardModel {
         return avgs.isEmpty ? nil : avgs.reduce(0, +) / Double(avgs.count)
     }
 
+    func scanLAN() async {
+        guard !lanScanning, let iface = LANScanner.localInterface() else { return }
+        lanScanning = true
+        lanProgress = 0
+        lanInterface = iface
+        defer { lanScanning = false; lanProgress = 1 }
+        let devices = await LANScanner.scan(iface) { p in
+            Task { @MainActor [weak self] in self?.lanProgress = p }
+        }
+        lanDevices = devices
+        lastLANScan = Date()
+    }
+
+    enum DeviceRole: Equatable { case thisDevice, mainRouter, baseStation(String) }
+
+    func role(of device: LANDevice) -> DeviceRole? {
+        if device.ip == lanInterface?.ip { return .thisDevice }
+        if let r = mainRouter, r.ipAddress == device.ip { return .mainRouter }
+        if let s = baseStations.first(where: { $0.ipAddress == device.ip }) { return .baseStation(s.name) }
+        return nil
+    }
+
+    /// Name to show: Bonjour/DNS name, else what we know about the role.
+    func displayName(of device: LANDevice) -> String {
+        if let n = device.hostName { return n }
+        switch role(of: device) {
+        case .thisDevice?:
+            #if os(macOS)
+            return "This Mac"
+            #else
+            return "This iPhone"
+            #endif
+        case .mainRouter?: return mainRouter?.name ?? "Router"
+        case .baseStation(let name)?: return name
+        case nil: return "Unknown device"
+        }
+    }
+
     func refreshWiFi() async {
         let status = await WiFiReader.current()
         wifi = status
@@ -211,6 +256,9 @@ final class DashboardModel {
         isRefreshing = true
         defer { isRefreshing = false; lastRefresh = Date() }
         defaultGateway = DefaultGateway.ipv4()
+        if lastLANScan.map({ Date().timeIntervalSince($0) > 10 * 60 }) ?? true {
+            Task { await scanLAN() }   // runs alongside; ~10 s
+        }
         async let airports: Void = browser.probeAll()
         async let internet: Void = refreshInternet()
         async let router: Void = refreshRouter()
